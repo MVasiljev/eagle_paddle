@@ -1,0 +1,26 @@
+.footer {
+  margin-top: auto; /* Push the footer to the bottom */
+  width: 100%;
+  text-align: center;
+  padding: 1rem 0;
+  background-color: #333;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.footer-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.footer-links div {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.footer p {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #888;
+}

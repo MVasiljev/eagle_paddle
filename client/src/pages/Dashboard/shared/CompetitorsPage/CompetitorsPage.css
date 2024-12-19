@@ -1,0 +1,67 @@
+.dashboard-container {
+  margin-top: 60px;
+  padding: 20px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the content horizontally */
+}
+
+.dashboard-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.competitors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center; /* Center cards within the list */
+}
+
+.competitor-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  color: #333;
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s;
+  width: 95%;
+  max-width: 93%;
+}
+
+.competitor-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px);
+}
+
+.competitor-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.competitor-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.competitor-name {
+  font-size: 18px;
+  margin: 0;
+  font-weight: bold;
+}
+
+.competitor-email {
+  font-size: 14px;
+  margin: 0;
+  color: #666;
+}

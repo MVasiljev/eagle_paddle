@@ -1,0 +1,71 @@
+.dashboard-container {
+  margin-top: 4rem;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.inputs-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between; /* Space between Duration and Intensity */
+  gap: 40px; /* Add spacing between components */
+  margin-bottom: 20px;
+}
+
+.inputs-container > div {
+  flex: 1; /* Ensures equal width for both components */
+  max-width: 42%; /* Optional: Adds consistency to width */
+  background-color: #ffffff; /* White background for uniform look */
+  border: 1px solid #ddd; /* Light gray border for clean look */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Light shadow */
+  padding: 20px; /* Uniform padding */
+  box-sizing: border-box; /* Includes padding in width calculation */
+}
+
+button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #388e3c;
+}
+
+.remove-btn {
+  background-color: #f44336; /* Red background */
+  color: white; /* White icon */
+  font-size: 1.5rem; /* Increase icon size */
+  line-height: 0; /* Prevent extra space */
+  display: flex; /* Center the icon */
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 50%;
+  width: 36px; /* Adjust size */
+  height: 36px; /* Adjust size */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.remove-btn:hover {
+  background-color: #d32f2f; /* Darker red on hover */
+}
+
+/* Add any additional styling to your input fields, select dropdowns, and labels */
+input[type="text"],
+input[type="number"],
+select {
+  margin: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+/* input[type="checkbox"] {
+  margin-left: 10px;
+} */
