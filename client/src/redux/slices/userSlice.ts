@@ -4,7 +4,8 @@ import { UpdateUserData, UserState } from "../../types/types";
 import { extractErrorMessage } from "../../utils/extactErrorMessage";
 
 const API_URL =
-  import.meta.env.VITE_API_URL + "users" || "http://localhost:5002/api/users";
+  import.meta.env.VITE_API_URL + "users" ||
+  "http://94.130.23.50:5002/api/users";
 
 const initialState: UserState = {
   users: [],
