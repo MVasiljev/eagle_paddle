@@ -66,6 +66,7 @@ select {
   border: 1px solid #ccc;
 }
 
-/* input[type="checkbox"] {
+input[type="checkbox"] {
   margin-left: 10px;
-} */
+  border: 1px solid #000;
+}
