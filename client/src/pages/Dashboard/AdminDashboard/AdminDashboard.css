@@ -1,0 +1,16 @@
+.dashboard-container {
+  margin-top: 4rem; /* Adjust this value to match the header's height */
+  padding: 1rem; /* Optional padding for the content */
+  box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+.dashboard-container h1 {
+  font-size: 2rem;
+  color: #333; /* Adjust color as needed */
+  margin-bottom: 1rem;
+}
+
+.dashboard-container p {
+  font-size: 1rem;
+  color: #555; /* Subtle text color for paragraph */
+}
