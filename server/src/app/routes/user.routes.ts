@@ -37,7 +37,7 @@ router.get("/", authenticate, listApprovedUsers);
 router.get(
   "/unapproved",
   authenticate,
-  authorizeRole("admin"),
+  // authorizeRole("admin"),
   listUnapprovedUsers
 );
 

@@ -85,6 +85,8 @@ const trainingPlanSchema: Schema = new Schema(
         // Cardio-Specific Fields
         duration: { type: Number, min: 1 },
         distance: { type: Number, min: 0 },
+
+        // Shared Fields
         intensity: { type: String }, // Optional
       },
     ],
