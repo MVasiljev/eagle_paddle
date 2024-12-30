@@ -1,8 +1,15 @@
 import React, { useState } from "react";
-import "./AdminRequestForApproval.css";
 import { useUsers } from "../../../../../hooks/useUsers";
 import { useRoles } from "../../../../../hooks/useRoles";
 import SearchBar from "../../../../../components/SearchBar/SearchBar";
+import {
+  DashboardContainer,
+  Table,
+  Select,
+  Button,
+  ErrorMessage,
+  LoadingMessage,
+} from "./AdminRequestForApproval.styles";
 
 const AdminRequestForApproval: React.FC = () => {
   const {
@@ -16,9 +23,8 @@ const AdminRequestForApproval: React.FC = () => {
 
   const [roleAssignments, setRoleAssignments] = useState<{
     [userId: string]: string;
-  }>({}); // Tracks role assignments for each user
+  }>({});
 
-  // Handle role assignment change
   const handleRoleChange = (userId: string, roleId: string) => {
     setRoleAssignments((prev) => ({
       ...prev,
@@ -26,7 +32,6 @@ const AdminRequestForApproval: React.FC = () => {
     }));
   };
 
-  // Handle approving a user
   const handleApprove = (userId: string) => {
     const assignedRole = roleAssignments[userId];
     if (!assignedRole) {
@@ -34,7 +39,7 @@ const AdminRequestForApproval: React.FC = () => {
       return;
     }
 
-    approveUserById(userId, true, assignedRole) // Pass the roleId
+    approveUserById(userId, true, assignedRole)
       .then(() => {
         alert("User approved successfully.");
       })
@@ -43,9 +48,8 @@ const AdminRequestForApproval: React.FC = () => {
       });
   };
 
-  // Handle rejecting a user
   const handleReject = (userId: string) => {
-    approveUserById(userId, true, "") // Pass the roleId
+    approveUserById(userId, false, "")
       .then(() => {
         alert("User rejected successfully.");
       })
@@ -54,20 +58,19 @@ const AdminRequestForApproval: React.FC = () => {
       });
   };
 
-  // If there's an error loading the users or roles, display it
   if (userError || rolesError) {
-    return <p>Error loading data: {userError || rolesError}</p>;
+    return <ErrorMessage>{userError || rolesError}</ErrorMessage>;
   }
 
   return (
-    <div className="dashboard-container">
+    <DashboardContainer>
       <SearchBar onSearch={(query) => console.log(query)} />
       {isLoadingUsers || isLoadingRoles ? (
-        <p>Loading...</p>
+        <LoadingMessage>Loading...</LoadingMessage>
       ) : unapprovedUsers.length === 0 ? (
         <p>No unapproved users available.</p>
       ) : (
-        <table className="approval-table">
+        <Table>
           <thead>
             <tr>
               <th>First Name</th>
@@ -84,7 +87,7 @@ const AdminRequestForApproval: React.FC = () => {
                 <td>{user.lastName}</td>
                 <td>{user.email}</td>
                 <td>
-                  <select
+                  <Select
                     value={roleAssignments[user._id] || ""}
                     onChange={(e) => handleRoleChange(user._id, e.target.value)}
                   >
@@ -96,28 +99,28 @@ const AdminRequestForApproval: React.FC = () => {
                         {role.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </td>
                 <td>
-                  <button
-                    onClick={() => handleApprove(user._id)} // Pass correct user id
+                  <Button
+                    onClick={() => handleApprove(user._id)}
                     className="approve-btn"
                   >
                     Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(user._id)} // Pass correct user id
+                  </Button>
+                  <Button
+                    onClick={() => handleReject(user._id)}
                     className="reject-btn"
                   >
                     Reject
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       )}
-    </div>
+    </DashboardContainer>
   );
 };
 

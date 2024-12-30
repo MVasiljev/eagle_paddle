@@ -1,24 +1,26 @@
+/** @jsxImportSource @emotion/react */
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { useAuth } from "../../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import "./Header.css";
-import { AiOutlineMenu, AiOutlineArrowLeft } from "react-icons/ai";
+import { Views } from "../../constants/views"; // Import the enum
+import {
+  HeaderContainer,
+  LogoSection,
+  Logo,
+  NavLinks,
+  NavLink,
+  ActionsContainer,
+  AvatarMenu,
+} from "./Header.styles";
+import { setView } from "../../redux/slices/viewSlice";
 
 const Header: React.FC = () => {
   const { user, token, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
     logout();
-    navigate("/");
-    setMobileMenuOpen(false); // Close the mobile menu after logout
-  };
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    setMobileMenuOpen(false); // Close the mobile menu after navigation
   };
 
   const roleName = user?.role?.name || "unknown";
@@ -28,47 +30,65 @@ const Header: React.FC = () => {
       case "admin":
         return (
           <>
-            <a onClick={() => handleNavigation("/dashboard/admin")}>Home</a>
-            <a onClick={() => handleNavigation("/dashboard/admin/profile")}>
-              Profile
-            </a>
-            <a onClick={() => handleNavigation("/dashboard/admin/requests")}>
-              Requests for Approval
-            </a>
-            <a
-              onClick={() => handleNavigation("/dashboard/admin/training-plan")}
+            <NavLink onClick={() => dispatch(setView(Views.CALENDAR))}>
+              Početna
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.PLAN))}>
+              Treninzi
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.COMPETITORS))}>
+              Takmičari
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.COACHES))}>
+              Treneri
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.REQUESTS))}>
+              Zahtevi za odobrenje
+            </NavLink>
+            <NavLink
+              onClick={() => dispatch(setView(Views.MENTAL_HEALTH_HISTORY))}
             >
-              Trainings
-            </a>
-            <a onClick={() => handleNavigation("/dashboard/admin/competitors")}>
-              Competitors
-            </a>
-            <a onClick={() => handleNavigation("/dashboard/admin/coaches")}>
-              Coaches
-            </a>
+              Mentalno zdravlje
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.REQUESTS))}>
+              Statistika
+            </NavLink>
           </>
         );
       case "coach":
         return (
           <>
-            <a onClick={() => handleNavigation("/dashboard/coach")}>Home</a>
-            <a
-              onClick={() => handleNavigation("/dashboard/coach/training-plan")}
-            >
-              Trainings
-            </a>
-            <a onClick={() => handleNavigation("/dashboard/admin/competitors")}>
-              Competitors
-            </a>
+            <NavLink onClick={() => dispatch(setView(Views.HOME))}>
+              Početna
+            </NavLink>
+
+            <NavLink onClick={() => dispatch(setView(Views.PLAN))}>
+              Treninzi
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.COMPETITORS))}>
+              Takmičari
+            </NavLink>
           </>
         );
       case "competitor":
         return (
           <>
-            {/* <a onClick={() => handleNavigation("/dashboard/events")}>
-              My Events
-            </a>
-            <a onClick={() => handleNavigation("/dashboard/stats")}>My Stats</a> */}
+            <NavLink onClick={() => dispatch(setView(Views.CALENDAR))}>
+              Početna
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.MY_PROFILE))}>
+              Moj profil
+            </NavLink>
+            <NavLink
+              onClick={() => dispatch(setView(Views.MENTAL_HEALTH_CREATE))}
+            >
+              Tvoj Dan
+            </NavLink>
+            <NavLink
+              onClick={() => dispatch(setView(Views.MY_MENTAL_HEALTH_HISTORY))}
+            >
+              Istorija raspoloženja
+            </NavLink>
           </>
         );
       default:
@@ -77,54 +97,34 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className={`header ${token ? "logged-in" : "logged-out"}`}>
-      <div className={`logo ${token ? "black-text" : "white-text"}`}>
-        EAGLE PADDLE
-      </div>
-
-      {/* Hamburger Menu for Mobile */}
-      <div className="hamburger-menu">
-        <button
-          className="menu-toggle"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? (
-            <AiOutlineArrowLeft size={24} />
-          ) : (
-            <AiOutlineMenu size={24} />
-          )}
-        </button>
-      </div>
-
-      <nav className={`nav ${mobileMenuOpen ? "mobile-open" : ""}`}>
-        {renderLinks()}
-      </nav>
-
-      <div className="actions">
+    <HeaderContainer>
+      <LogoSection>
+        <Logo>EAGLE PADDLE</Logo>
+        <NavLinks>{renderLinks()}</NavLinks>
+      </LogoSection>
+      <ActionsContainer>
         {token && (
-          <>
-            <div className="avatar-menu">
-              <img
-                src="https://i.pravatar.cc/40"
-                alt="User Avatar"
-                className="avatar"
-                onClick={() => setMenuOpen(!menuOpen)}
-              />
-              {menuOpen && (
-                <div className="menu">
-                  <p>
-                    {user?.firstName} {user?.lastName}
-                  </p>
-                  <button onClick={handleLogout} className="logout-btn">
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
+          <AvatarMenu>
+            <img
+              src="https://i.pravatar.cc/40"
+              alt="User Avatar"
+              className="avatar"
+              onClick={() => setMenuOpen(!menuOpen)}
+            />
+            {menuOpen && (
+              <div className="menu">
+                <p>
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <button onClick={handleLogout} className="logout-btn">
+                  Logout
+                </button>
+              </div>
+            )}
+          </AvatarMenu>
         )}
-      </div>
-    </header>
+      </ActionsContainer>
+    </HeaderContainer>
   );
 };
 

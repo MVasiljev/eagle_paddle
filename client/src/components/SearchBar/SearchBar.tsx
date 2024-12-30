@@ -1,6 +1,11 @@
+/** @jsxImportSource @emotion/react */
 import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa"; // Search icon
-import "./SearchBar.css";
+import {
+  SearchBarContainer,
+  SearchInput,
+  SearchIconContainer,
+} from "./SearchBar.styles";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -20,21 +25,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   return (
-    <div className="search-bar-container">
+    <SearchBarContainer>
       {/* Search Icon */}
-      <div className="search-actions">
+      <SearchIconContainer>
         <FaSearch />
-      </div>
+      </SearchIconContainer>
 
       {/* Input Field */}
-      <input
+      <SearchInput
         type="text"
         value={query}
         onChange={handleChange}
         placeholder={placeholder}
-        className="search-input"
       />
-    </div>
+    </SearchBarContainer>
   );
 };
 

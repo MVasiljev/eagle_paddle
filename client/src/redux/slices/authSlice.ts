@@ -12,6 +12,7 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   serverError: null,
+  isRegistered: false,
 };
 
 // Register User
@@ -61,8 +62,12 @@ const authSlice = createSlice({
       state.user = null;
       state.error = null;
       state.serverError = null;
+      state.isRegistered = false;
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+    },
+    resetRegistration: (state) => {
+      state.isRegistered = false; // Reset after showing success alert
     },
   },
   extraReducers: (builder) => {
@@ -72,13 +77,16 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null; // Clear previous error
         state.serverError = null;
+        state.isRegistered = false; // Reset during new registration attempt
       })
       .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
+        state.isRegistered = true; // Mark registration as successful
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string; // Store specific error
+        state.isRegistered = false; // Ensure it's not marked successful
       })
       // Login
       .addCase(loginUser.pending, (state) => {
@@ -98,6 +106,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, resetRegistration } = authSlice.actions;
 
 export default authSlice.reducer;

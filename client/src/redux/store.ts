@@ -5,6 +5,12 @@ import roleReducer from "./slices/roleSlice";
 import trainingPlanSlice from "./slices/trainingPlanSlice";
 import traininSessionSlice from "./slices/trainingSessionSlice";
 import teamSlice from "./slices/teamSlice";
+import viewReducer from "./slices/viewSlice";
+import clubReducer from "./slices/clubSlice";
+import boatReducer from "./slices/boatSlice";
+import mentalHealthReducer from "./slices/mentalHealthSlice";
+import disciplineReducer from "./slices/disciplineSlice";
+import trainingTypeSlice from "./slices/trainingTypeSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +20,12 @@ export const store = configureStore({
     trainingPlan: trainingPlanSlice,
     trainingSession: traininSessionSlice,
     teams: teamSlice,
+    dashboard: viewReducer,
+    clubs: clubReducer,
+    boats: boatReducer,
+    mentalHealth: mentalHealthReducer,
+    disciplines: disciplineReducer,
+    trainingTypes: trainingTypeSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

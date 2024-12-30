@@ -1,11 +1,16 @@
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, registerUser, logout } from "../redux/slices/authSlice";
+import {
+  loginUser,
+  registerUser,
+  logout,
+  resetRegistration,
+} from "../redux/slices/authSlice";
 import { AppDispatch, RootState } from "../redux/store";
 import { RegisterUserData } from "../types/types";
 
 export const useAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { user, token, isLoading, error } = useSelector(
+  const { user, token, isLoading, error, isRegistered } = useSelector(
     (state: RootState) => state.auth
   );
 
@@ -31,13 +36,19 @@ export const useAuth = () => {
     dispatch(logout());
   };
 
+  const resetRegistrationState = () => {
+    dispatch(resetRegistration()); // Dispatch the resetRegistration action
+  };
+
   return {
     user,
     token,
     isLoading,
     error, // Expose action-specific error
+    isRegistered,
     login,
     register,
     logout: performLogout,
+    resetRegistration: resetRegistrationState,
   };
 };

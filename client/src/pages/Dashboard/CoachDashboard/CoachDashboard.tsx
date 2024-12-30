@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
-import "./AdminDashboard.css";
+// import "./AdminDashboard.css";
 import SearchBar from "../../../components/SearchBar/SearchBar";
 import Calendar from "../../../components/Calendar/Calendar";
 import { DateClickArg } from "@fullcalendar/interaction/index.js";

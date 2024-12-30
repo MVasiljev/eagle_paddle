@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { MdAdd, MdDelete } from "react-icons/md";
-import "./Duration.css";
+import {
+  DurationContainer,
+  DurationHeader,
+  InputGroup,
+  InputLabel,
+  InputField,
+  SelectField,
+  Button,
+  AddButton,
+  CheckboxWrapper,
+} from "./DurationStyles";
 
 interface DurationProps {
   initialDurations?: { duration: number; unit: string }[];
@@ -58,34 +68,37 @@ export const Duration = ({
   };
 
   return (
-    <div className="duration-container">
-      <h4>Duration / Distance</h4>
-      <label>
-        Segment Type:
-        <select
+    <DurationContainer>
+      <DurationHeader>Trajanje</DurationHeader>
+
+      {/* Segment Type */}
+      <InputLabel>
+        Tip Segmenta:
+        <SelectField
           value={segmentType}
           onChange={(e) => setSegmentType(e.target.value)}
         >
-          <option value="vreme">Time</option>
-          <option value="distance">Distance</option>
-        </select>
-      </label>
+          <option value="vreme">Vreme</option>
+          <option value="distance">Razdaljina</option>
+        </SelectField>
+      </InputLabel>
 
+      {/* Duration Inputs */}
       {durations.map((d, index) => (
-        <div key={index} className="input-group">
-          <label>
-            Duration:
-            <input
+        <InputGroup key={index}>
+          <InputLabel>
+            Trajanje:
+            <InputField
               type="number"
               value={d.duration}
               onChange={(e) =>
                 handleDurationChange(index, "duration", +e.target.value)
               }
             />
-          </label>
-          <label>
-            Unit:
-            <select
+          </InputLabel>
+          <InputLabel>
+            Jedinica:
+            <SelectField
               value={d.unit}
               onChange={(e) =>
                 handleDurationChange(index, "unit", e.target.value)
@@ -93,48 +106,50 @@ export const Duration = ({
             >
               {segmentType === "vreme" ? (
                 <>
-                  <option value="s">Seconds</option>
-                  <option value="min">Minutes</option>
+                  <option value="s">Sekunde</option>
+                  <option value="min">Minuti</option>
                 </>
               ) : (
                 <>
-                  <option value="m">Meters</option>
-                  <option value="km">Kilometers</option>
+                  <option value="m">Metri</option>
+                  <option value="km">Kilometri</option>
                 </>
               )}
-            </select>
-          </label>
+            </SelectField>
+          </InputLabel>
           {durations.length > 1 && (
-            <button
+            <Button
               style={{
-                height: "60px",
-                width: "60px",
-                background: "transparent",
-                color: "red",
+                marginTop: "1.5rem",
+                marginLeft: "1rem",
+                height: "3rem",
+                width: "3rem",
+                color: "white",
               }}
               onClick={() => removeDuration(index)}
             >
               <MdDelete />
-            </button>
+            </Button>
           )}
-        </div>
+        </InputGroup>
       ))}
 
-      {/* Conditionally show the add button based on "Pyramid" toggle */}
+      {/* Add Duration Button */}
       {piramida && (
-        <button onClick={addDuration}>
-          <MdAdd /> Add Duration
-        </button>
+        <AddButton onClick={addDuration}>
+          <MdAdd /> Dodaj Trajanje
+        </AddButton>
       )}
 
-      <label>
+      {/* Pyramid Toggle */}
+      <CheckboxWrapper>
         <input
           type="checkbox"
           checked={piramida}
           onChange={handlePiramidaToggle}
         />
-        Enable Pyramid
-      </label>
-    </div>
+        <label>Omogući Piramidu</label>
+      </CheckboxWrapper>
+    </DurationContainer>
   );
 };

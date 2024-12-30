@@ -1,142 +1,163 @@
-import { useState } from "react";
-import { GymSegment } from "./types";
+import { useState, useEffect } from "react";
+import {
+  SegmentContainer,
+  SegmentHeader,
+  InputField,
+  SelectField,
+  InputLabel,
+} from "./GymSegmentStyles";
+import { ExerciseSegment } from "./types";
+import { useTrainingTypes } from "../../../../hooks/useTrainingTypes";
 
 interface GymSegmentInputProps {
-  segment: GymSegment;
-  onUpdate: (updatedSegment: GymSegment) => void;
+  segment: ExerciseSegment;
+  onUpdate: (updatedSegment: ExerciseSegment) => void;
 }
 
 export const GymSegmentInput = ({
   segment,
   onUpdate,
 }: GymSegmentInputProps) => {
-  const [localSegment, setLocalSegment] = useState(segment);
+  const [localSegment, setLocalSegment] = useState<ExerciseSegment>({
+    ...segment,
+    variant: "gym",
+  });
 
-  const trainingCategories = [
-    {
-      id: "1",
-      name: "Strength",
-      subcategories: [
-        { id: "1-1", name: "Lifting" },
-        { id: "1-2", name: "Powerlifting" },
-      ],
-    },
-    {
-      id: "2",
-      name: "Cardio",
-      subcategories: [
-        { id: "2-1", name: "Running" },
-        { id: "2-2", name: "Cycling" },
-      ],
-    },
-  ];
+  const {
+    types: trainingTypes,
+    getTrainingTypes,
+    isLoading,
+    error,
+  } = useTrainingTypes();
 
-  const handleChange = <K extends keyof GymSegment>(
+  useEffect(() => {
+    getTrainingTypes();
+  }, []);
+
+  // Filter types by 'strength' and 'cardio'
+  const gymCategories = trainingTypes.filter(
+    (type) => type.variant === "strength" || type.variant === "cardio"
+  );
+
+  // Handle state changes and propagate to parent component
+  const handleChange = <K extends keyof ExerciseSegment>(
     field: K,
-    value: GymSegment[K]
+    value: ExerciseSegment[K]
   ) => {
-    const updatedSegment = { ...localSegment, [field]: value };
-    setLocalSegment(updatedSegment);
-    onUpdate(updatedSegment);
+    const updated = { ...localSegment, [field]: value };
+    setLocalSegment(updated);
+    onUpdate(updated);
   };
 
-  const filteredSubcategories =
-    trainingCategories.find((cat) => cat.name === localSegment.type)
-      ?.subcategories || [];
+  // Find subcategories based on selected type and category
+  const filteredCategories = gymCategories.find(
+    (cat) => cat.variant === localSegment.type
+  )?.categories;
 
   return (
-    <div>
-      <h4>{localSegment.name}</h4>
-      <label>Type:</label>
-      <select
+    <SegmentContainer>
+      <SegmentHeader>{localSegment.name || "Gym Segment"}</SegmentHeader>
+
+      {/* Segment Name */}
+      <InputLabel>Naziv Segmenta:</InputLabel>
+      <InputField
+        type="text"
+        value={localSegment.name}
+        onChange={(e) => handleChange("name", e.target.value)}
+        placeholder="Naziv Gym Segmenta"
+      />
+
+      {/* Tip (strength/cardio) */}
+      <InputLabel>Tip Segmenta:</InputLabel>
+      <SelectField
         value={localSegment.type}
         onChange={(e) => handleChange("type", e.target.value)}
       >
-        <option value="">Select Type</option>
-        {trainingCategories.map((category) => (
-          <option key={category.id} value={category.name}>
-            {category.name}
-          </option>
-        ))}
-      </select>
+        <option value="">Izaberite tip</option>
+        <option value="strength">Snaga</option>
+        <option value="cardio">Kardio</option>
+      </SelectField>
 
-      <label>Category:</label>
-      <select
+      {/* Category Selection */}
+      <InputLabel>Kategorija:</InputLabel>
+      <SelectField
         value={localSegment.category}
         onChange={(e) => handleChange("category", e.target.value)}
         disabled={!localSegment.type}
       >
-        <option value="">Select Category</option>
-        {filteredSubcategories.map((sub) => (
-          <option key={sub.id} value={sub.name}>
-            {sub.name}
+        <option value="">Izaberite kategoriju</option>
+        {filteredCategories?.map((category, index) => (
+          <option key={index} value={category}>
+            {category}
           </option>
         ))}
-      </select>
+      </SelectField>
 
-      {localSegment.type === "Strength" && (
+      {/* Strength-Specific Inputs */}
+      {localSegment.type === "strength" && (
         <>
-          <label>Reps:</label>
-          <input
+          <InputLabel>Vežba:</InputLabel>
+          <InputField
+            type="text"
+            value={localSegment.exercise || ""}
+            onChange={(e) => handleChange("exercise", e.target.value)}
+            placeholder="Naziv vežbe"
+          />
+
+          <InputLabel>Broj ponavljanja:</InputLabel>
+          <InputField
             type="number"
-            value={localSegment.reps}
+            value={localSegment.reps || ""}
             onChange={(e) => handleChange("reps", +e.target.value)}
           />
 
-          <label>Weight (kg):</label>
-          <input
+          <InputLabel>Težina (kg):</InputLabel>
+          <InputField
             type="number"
-            value={localSegment.weight}
+            value={localSegment.weight || ""}
             onChange={(e) => handleChange("weight", +e.target.value)}
           />
 
-          <label>Sets:</label>
-          <input
+          <InputLabel>Broj serija:</InputLabel>
+          <InputField
             type="number"
-            value={localSegment.sets}
+            value={localSegment.sets || ""}
             onChange={(e) => handleChange("sets", +e.target.value)}
-          />
-
-          <label>Pause Between Sets (s):</label>
-          <input
-            type="number"
-            value={localSegment.pauseBetweenSets}
-            onChange={(e) => handleChange("pauseBetweenSets", +e.target.value)}
           />
         </>
       )}
 
-      {localSegment.type === "Cardio" && (
+      {/* Cardio-Specific Inputs */}
+      {localSegment.type === "cardio" && (
         <>
-          <label>Duration (min):</label>
-          <input
+          <InputLabel>Trajanje (min):</InputLabel>
+          <InputField
             type="number"
             value={localSegment.duration || ""}
             onChange={(e) => handleChange("duration", +e.target.value)}
           />
 
-          <label>Distance (m):</label>
-          <input
+          <InputLabel>Udaljenost (m):</InputLabel>
+          <InputField
             type="number"
             value={localSegment.distance || ""}
             onChange={(e) => handleChange("distance", +e.target.value)}
           />
 
-          <label>Intensity (%):</label>
-          <input
+          <InputLabel>Intenzitet (0-100%):</InputLabel>
+          <InputField
             type="number"
             value={localSegment.intensity || ""}
             onChange={(e) => handleChange("intensity", +e.target.value)}
-          />
-
-          <label>Rest Time (s):</label>
-          <input
-            type="number"
-            value={localSegment.restTime || ""}
-            onChange={(e) => handleChange("restTime", +e.target.value)}
+            min="0"
+            max="100"
           />
         </>
       )}
-    </div>
+
+      {/* Loading and Error States */}
+      {isLoading && <p>Učitavanje tipova treninga...</p>}
+      {error && <p style={{ color: "red" }}>Greška: {error}</p>}
+    </SegmentContainer>
   );
 };

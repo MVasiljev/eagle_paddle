@@ -1,74 +1,63 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import "./CompetitorsPage.css";
-import { useUsers } from "../../../../hooks/useUsers";
-import { useRoles } from "../../../../hooks/useRoles";
+import { useDispatch } from "react-redux";
+import {
+  setView,
+  setSelectedCompetitorId,
+} from "../../../../redux/slices/viewSlice";
 import SearchBar from "../../../../components/SearchBar/SearchBar";
+import {
+  CompetitorsContainer,
+  CompetitorsList,
+  CompetitorCard,
+  CompetitorAvatar,
+  CompetitorName,
+} from "./CompetitorsPage.styles";
+import { useUsers } from "../../../../hooks/useUsers";
+import { Views } from "../../../../constants/views";
 
 const CompetitorsPage: React.FC = () => {
+  const dispatch = useDispatch();
   const { users, isLoading: isUsersLoading, error: usersError } = useUsers();
-  const { roles, isLoading: isRolesLoading, error: rolesError } = useRoles();
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Default avatar URL
-  const defaultAvatarUrl =
-    "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
+  const filteredCompetitors = users.filter((competitor) =>
+    `${competitor.firstName} ${competitor.lastName}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
 
-  // Filter competitors by matching role name
-  const allCompetitors = users.filter((user) => {
-    const role = roles.find((role) => role._id === user.role?._id);
-    return role?.name === "competitor";
-  });
-
-  // Filter competitors based on the search query
-  const filteredCompetitors = allCompetitors.filter((competitor) => {
-    const fullName =
-      `${competitor.firstName} ${competitor.lastName}`.toLowerCase();
-    return (
-      fullName.includes(searchQuery.toLowerCase()) ||
-      competitor.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query); // Update search query state
+  const handleCompetitorClick = (competitorId: string) => {
+    dispatch(setSelectedCompetitorId(competitorId)); // Set selected competitor ID
+    dispatch(setView(Views.PROFILE)); // Change view to PROFILE
   };
 
   return (
-    <div className="dashboard-container">
-      <h2 className="dashboard-title">Approved Competitors</h2>
-      <SearchBar onSearch={handleSearch} placeholder="Search competitors..." />
-
-      {isUsersLoading || isRolesLoading ? (
+    <CompetitorsContainer>
+      <SearchBar
+        onSearch={(query) => setSearchQuery(query)}
+        placeholder="Pretražite takmičare..."
+      />
+      {isUsersLoading ? (
         <p>Loading competitors...</p>
-      ) : usersError || rolesError ? (
-        <p className="error">{usersError || rolesError}</p>
-      ) : filteredCompetitors.length === 0 ? (
-        <p>No competitors found matching your search.</p>
+      ) : usersError ? (
+        <p className="error">{usersError}</p>
       ) : (
-        <div className="competitors-list">
-          {filteredCompetitors.map((competitor) => (
-            <Link
-              to={`/dashboard/competitor/${competitor._id}`}
+        <CompetitorsList>
+          {filteredCompetitors.map((competitor, index) => (
+            <CompetitorCard
               key={competitor._id}
-              className="competitor-card"
+              onClick={() => handleCompetitorClick(competitor._id)}
             >
-              <img
-                src={defaultAvatarUrl}
-                alt={`${competitor.firstName} ${competitor.lastName}`}
-                className="competitor-avatar"
+              <CompetitorAvatar
+                src={`https://i.pravatar.cc/150?img=${index + 1}`}
+                alt={`${competitor.firstName}`}
               />
-              <div className="competitor-info">
-                <h3 className="competitor-name">
-                  {competitor.firstName} {competitor.lastName}
-                </h3>
-                <p className="competitor-email">{competitor.email}</p>
-              </div>
-            </Link>
+              <CompetitorName>{competitor.firstName}</CompetitorName>
+            </CompetitorCard>
           ))}
-        </div>
+        </CompetitorsList>
       )}
-    </div>
+    </CompetitorsContainer>
   );
 };
 

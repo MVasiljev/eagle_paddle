@@ -1,6 +1,6 @@
 export interface Duration {
   duration: number;
-  unit: string;
+  unit: "m" | "km" | "s" | "min";
 }
 
 export interface Intensity {
@@ -20,43 +20,39 @@ export interface TrainingSubcategory {
   name: string;
 }
 
-export interface GymSegment {
+// Unified Exercise Segment (Standard, Gym, Cardio)
+export interface ExerciseSegment {
   name: string;
-  type: string; // e.g., Cardio, Strength
-  category: string;
-
-  // Strength-specific properties
-  reps?: number;
-  weight?: number; // Weight in kg
-  sets?: number; // Number of sets
-  pauseBetweenSets?: number; // Pause in seconds
-
-  // Cardio-specific properties
-  duration?: number; // Duration in minutes
-  distance?: number; // Distance in meters or kilometers
-  intensity?: number; // Intensity as a percentage
-  restTime?: number; // Rest time in seconds
-}
-
-export interface Segment {
-  name: string;
+  variant: "standard" | "gym";
   type: string;
   category: string;
-  durations: Duration[];
-  unit: string;
-  intensityType: string;
-  intensities: Intensity[];
-  seriesCount: number;
-  segmentCount: number;
-  pauseAfterSeries: number;
-  pauseAfterSegment: number;
+  durations?: Duration[];
+  unit?: "m" | "km" | "s" | "min";
+  intensityType?:
+    | "single"
+    | "multiple"
+    | "time-intensity"
+    | "technique-time-intensity";
+  intensities?: Intensity[];
+  series?: number;
+  repetitions?: number;
+  restBetweenSeries?: number;
+  restBetweenRepetitions?: number;
+  reps?: number;
+  weight?: number;
+  sets?: number;
+  pauseBetweenSets?: number;
+  duration?: number;
+  distance?: number;
+  intensity?: number; // Fix: Intensity is now a number
+  exercise?: string;
 }
 
+// Plan Interface
 export interface Plan {
   planName: string;
   type?: string;
   category?: string;
   durations?: Duration[];
-  segments: Segment[];
-  gymSegments: GymSegment[];
+  exercises: ExerciseSegment[]; // Unifies gym + standard segments
 }

@@ -25,7 +25,9 @@ const AppRouter: React.FC = () => {
 
   return (
     <Router>
-      <Header />
+      {/* Show Header only if the user is logged in */}
+      {token && user && <Header />}
+
       <Routes>
         {/* Home route */}
         <Route path="/" element={<Home />} />

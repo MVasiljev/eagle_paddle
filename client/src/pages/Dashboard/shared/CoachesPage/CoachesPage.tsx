@@ -1,25 +1,32 @@
 import React, { useState } from "react";
-import "./CoachesPage.css";
+import { useDispatch } from "react-redux";
+import {
+  setView,
+  setSelectedCoachId,
+} from "../../../../redux/slices/viewSlice";
+import SearchBar from "../../../../components/SearchBar/SearchBar";
+import {
+  CoachesContainer,
+  CoachesList,
+  CoachCard,
+  CoachAvatar,
+  CoachName,
+} from "./CoachesPage.styles";
 import { useUsers } from "../../../../hooks/useUsers";
 import { useRoles } from "../../../../hooks/useRoles";
-import SearchBar from "../../../../components/SearchBar/SearchBar";
+import { Views } from "../../../../constants/views";
 
 const CoachesPage: React.FC = () => {
+  const dispatch = useDispatch();
   const { users, isLoading: isUsersLoading, error: usersError } = useUsers();
   const { roles, isLoading: isRolesLoading, error: rolesError } = useRoles();
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Default avatar URL
-  const defaultAvatarUrl =
-    "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
-
-  // Filter coaches by matching role name
   const allCoaches = users.filter((user) => {
     const role = roles.find((role) => role._id === user.role?._id);
     return role?.name === "coach";
   });
 
-  // Filter coaches based on the search query
   const filteredCoaches = allCoaches.filter((coach) => {
     const fullName = `${coach.firstName} ${coach.lastName}`.toLowerCase();
     return (
@@ -28,15 +35,17 @@ const CoachesPage: React.FC = () => {
     );
   });
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query); // Update search query state
+  const handleCoachClick = (coachId: string) => {
+    dispatch(setSelectedCoachId(coachId)); // Set selected coach ID
+    dispatch(setView(Views.COACH_PROFILE)); // Change view to PROFILE
   };
 
   return (
-    <div className="dashboard-container">
-      <h2 className="dashboard-title">Approved Coaches</h2>
-      <SearchBar onSearch={handleSearch} placeholder="Search coaches..." />
-
+    <CoachesContainer>
+      <SearchBar
+        onSearch={(query) => setSearchQuery(query)}
+        placeholder="Search coaches..."
+      />
       {isUsersLoading || isRolesLoading ? (
         <p>Loading coaches...</p>
       ) : usersError || rolesError ? (
@@ -44,25 +53,22 @@ const CoachesPage: React.FC = () => {
       ) : filteredCoaches.length === 0 ? (
         <p>No coaches found matching your search.</p>
       ) : (
-        <div className="coaches-list">
-          {filteredCoaches.map((coach) => (
-            <div key={coach._id} className="coach-card">
-              <img
-                src={defaultAvatarUrl}
-                alt={`${coach.firstName} ${coach.lastName}`}
-                className="coach-avatar"
+        <CoachesList>
+          {filteredCoaches.map((coach, index) => (
+            <CoachCard
+              key={coach._id}
+              onClick={() => handleCoachClick(coach._id)}
+            >
+              <CoachAvatar
+                src={`https://i.pravatar.cc/150?img=${index + 1}`}
+                alt={`${coach.firstName}`}
               />
-              <div className="coach-info">
-                <h3 className="coach-name">
-                  {coach.firstName} {coach.lastName}
-                </h3>
-                <p className="coach-email">{coach.email}</p>
-              </div>
-            </div>
+              <CoachName>{coach.firstName}</CoachName>
+            </CoachCard>
           ))}
-        </div>
+        </CoachesList>
       )}
-    </div>
+    </CoachesContainer>
   );
 };
 

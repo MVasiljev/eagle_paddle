@@ -1,10 +1,13 @@
-// src/components/Calendar.tsx
+/** @jsxImportSource @emotion/react */
 import React, { useState } from "react";
-import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import { EventClickArg, EventInput } from "@fullcalendar/core";
-import "./Calendar.css"; // Import custom styles
+import {
+  CalendarContainer,
+  EventModal,
+  StyledFullCalendar,
+} from "./Calendar.styles";
 
 interface CalendarProps {
   events: EventInput[]; // Array of event objects
@@ -31,25 +34,22 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   return (
-    <div className="calendar-container">
-      <FullCalendar
+    <CalendarContainer>
+      <StyledFullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         events={events}
         eventClick={handleEventClick}
         dateClick={handleDateClick}
         headerToolbar={{
-          left: "prev,next,today",
+          left: "prev,next",
           center: "title",
           right: "dayGridMonth,dayGridWeek",
         }}
         eventClassNames={(eventInfo) => {
-          // Add a class based on the event status
-          if (eventInfo.event.extendedProps.status === "completed") {
-            return "completed-event";
-          } else {
-            return "upcoming-event";
-          }
+          return eventInfo.event.extendedProps.status === "completed"
+            ? "completed-event"
+            : "upcoming-event";
         }}
         eventContent={(eventInfo) => (
           <div>
@@ -64,18 +64,16 @@ const Calendar: React.FC<CalendarProps> = ({
         )}
       />
 
-      {/* Event Modal (You can modify it as per your needs) */}
       {selectedEvent && (
-        <div className="event-modal">
+        <EventModal>
           <h2>Event Details</h2>
           <div>
             <strong>{selectedEvent.event.title}</strong>
             <p>Status: {selectedEvent.event.extendedProps.status}</p>
-            {/* You can add more event details here */}
           </div>
-        </div>
+        </EventModal>
       )}
-    </div>
+    </CalendarContainer>
   );
 };
 

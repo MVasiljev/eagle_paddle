@@ -9,9 +9,22 @@ import { useRoles } from "../../../../hooks/useRoles";
 import { TrainingPlan } from "../../../../types/types";
 import { AiOutlinePlus } from "react-icons/ai";
 import * as Yup from "yup";
-import { useAuth } from "../../../../hooks/useAuth"; // Import useAuth for current user
-import "./AssignCompetitorsToTraining.css";
-import { fetchTeams } from "../../../../redux/slices/teamSlice";
+import { useAuth } from "../../../../hooks/useAuth";
+import {
+  Container,
+  FormGroup,
+  Select,
+  Input,
+  PlanSummary,
+  CompetitorsContainer,
+  CompetitorItem,
+  Button,
+  FormActions,
+  ListContainer,
+  ListTitle,
+  AddButton,
+} from "./AssignCompetitorsToTraining.styles";
+import CustomToast from "../../../../components/CustomToast/CustomToast";
 
 interface Props {
   role: "admin" | "coach";
@@ -20,9 +33,9 @@ interface Props {
 const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get current logged-in user
-
+  const { user } = useAuth();
   const { roles } = useRoles();
+
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [selectedCompetitors, setSelectedCompetitors] = useState<string[]>([]);
   const [selectedCoach, setSelectedCoach] = useState<string | null>(null);
@@ -31,11 +44,10 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
     useState<TrainingPlan | null>(null);
 
   useEffect(() => {
-    dispatch(fetchTeams());
+    dispatch(fetchApprovedUsers());
     dispatch(fetchTrainingPlans());
   }, [dispatch]);
 
-  // Selectors
   const users = useSelector((state: RootState) => state.user.users || []);
   const usersLoading = useSelector((state: RootState) => state.user.isLoading);
   const trainingPlans = useSelector(
@@ -47,23 +59,20 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
 
   const handleAssignPlan = async () => {
     const schema = Yup.object().shape({
-      selectedPlan: Yup.string().required("Please select a training plan."),
-      date: Yup.string().required("Please select a date."),
+      selectedPlan: Yup.string().required(
+        "Molimo vas da izaberete plan treninga."
+      ),
+      date: Yup.string().required("Molimo vas da izaberete datum."),
       selectedCompetitors: Yup.array()
-        .min(1, "Please select at least one competitor.")
+        .min(1, "Molimo vas da izaberete barem jednog takmičara.")
         .required(),
       selectedCoach:
         role === "admin"
-          ? Yup.string().required("Please select a coach.")
-          : Yup.mixed().nullable(), // Skip validation for coach if role is "coach"
+          ? Yup.string().required("Molimo vas da izaberete trenera.")
+          : Yup.mixed().nullable(),
     });
 
-    const formData = {
-      selectedPlan,
-      date,
-      selectedCompetitors,
-      selectedCoach,
-    };
+    const formData = { selectedPlan, date, selectedCompetitors, selectedCoach };
 
     try {
       await schema.validate(formData, { abortEarly: false });
@@ -71,25 +80,26 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
       const payload = {
         planId: selectedPlan,
         competitorIds: selectedCompetitors,
-        coachId: role === "admin" ? selectedCoach : user?._id, // If coach, use current user's ID
+        coachId: role === "admin" ? selectedCoach : user?._id,
         date,
-        iteration: 1, // Default iteration value
+        iteration: 1,
       };
 
-      console.log("Payload being sent:", payload);
-
       await dispatch(assignPlanToCompetitors(payload)).unwrap();
-      alert("Training plan assigned successfully!");
-      navigate("/"); // Navigate to home
-    } catch (error: unknown) {
-      if (error.inner) {
-        error.inner.forEach((err: Yup.ValidationError) =>
-          console.error(err.message)
-        );
-        alert("Validation failed. Please check your inputs.");
+      <CustomToast
+        text="Plan treninga je uspešno dodeljen"
+        heading={"Dodavanje plana"}
+        buttonName={""}
+        onButtonClick={function (): void {
+          throw new Error("Funkcija nije implementirana.");
+        }}
+      />;
+      navigate("/");
+    } catch (error) {
+      if (error instanceof Yup.ValidationError) {
+        alert("Validacija nije uspela. Proverite unose.");
       } else {
-        console.error("Error assigning plan:", error);
-        alert("Failed to assign the training plan.");
+        console.error("Došlo je do neočekivane greške:", error);
       }
     }
   };
@@ -118,13 +128,11 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
     setSelectedCoach(null);
   };
 
-  // Filter competitors and coaches
   const competitors = users.filter((user) => {
     const role = roles.find((role) => role._id === user.role?._id);
     return role?.name === "competitor";
   });
 
-  // Filter coaches but exclude self if the user is a coach
   const coaches = users.filter((coach) => {
     const role = roles.find((role) => role._id === coach.role?._id);
     return (
@@ -133,152 +141,159 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
     );
   });
 
-  return (
-    <div className="assign-container">
-      <h2>Assign Training Plan to Competitors</h2>
+  const formatJSON = (
+    obj: Record<string, unknown> | TrainingPlan,
+    depth: number = 0
+  ): React.ReactNode => {
+    if (typeof obj !== "object" || obj === null) {
+      return (
+        <div style={{ marginLeft: `${depth * 20}px` }}>
+          <span>{obj}</span>
+        </div>
+      );
+    }
 
-      {/* Plan Selection */}
-      <div className="form-group">
-        <label>Training Plan:</label>
-        <select
+    if (Array.isArray(obj)) {
+      // Render arrays with bullets
+      return (
+        <ul style={{ marginLeft: `${depth * 20}px`, paddingLeft: "20px" }}>
+          {obj.map((item, index) => (
+            <li key={index}>{formatJSON(item, depth + 1)}</li>
+          ))}
+        </ul>
+      );
+    }
+
+    // Render objects
+    return (
+      <>
+        {Object.entries(obj)
+          .filter(
+            ([key]) => !["_id", "__v", "createdAt", "updatedAt"].includes(key)
+          ) // Exclude unwanted fields
+          .map(([key, value]) => (
+            <div key={key} style={{ marginLeft: `${depth * 20}px` }}>
+              <span style={{ fontWeight: "bold" }}>{key}:</span>
+              {typeof value === "object" ? (
+                value && formatJSON(value as Record<string, unknown>, depth + 1)
+              ) : (
+                <span style={{ marginLeft: "10px" }}>{String(value)}</span>
+              )}
+            </div>
+          ))}
+      </>
+    );
+  };
+
+  return (
+    <Container>
+      <FormGroup>
+        <label>Plan treninga:</label>
+        <Select
           value={selectedPlan}
           onChange={(e) => handlePlanSelection(e.target.value)}
         >
-          <option value="">-- Select a Training Plan --</option>
+          <option value="">-- Izaberite plan treninga --</option>
           {plansLoading ? (
-            <option disabled>Loading plans...</option>
-          ) : trainingPlans.length > 0 ? (
+            <option disabled>Učitavanje planova...</option>
+          ) : (
             trainingPlans.map((plan) => (
               <option key={plan._id} value={plan._id}>
                 {plan.name}
               </option>
             ))
-          ) : (
-            <option disabled>No plans available</option>
           )}
-        </select>
-      </div>
+        </Select>
+      </FormGroup>
 
-      {/* Plan Summary */}
       {selectedPlanDetails && (
-        <div className="plan-summary">
-          <h4>Selected Plan Summary:</h4>
-          <pre>{JSON.stringify(selectedPlanDetails, null, 2)}</pre>
-        </div>
+        <PlanSummary>
+          <h4>Izabrani plan - Pregled:</h4>
+          <pre>{formatJSON(selectedPlanDetails)}</pre>
+        </PlanSummary>
       )}
 
-      {/* Date Input */}
-      <div className="form-group">
-        <label>Date:</label>
-        <input
+      <FormGroup>
+        <label>Datum:</label>
+        <Input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
-      </div>
+      </FormGroup>
 
-      {/* Competitors Selection */}
-      <div className="competitors-container">
-        <div className="competitors-list">
-          <h4>Available Competitors:</h4>
+      <CompetitorsContainer>
+        <ListContainer>
+          <ListTitle>Dostupni takmičari:</ListTitle>
           {usersLoading ? (
-            <p>Loading competitors...</p>
-          ) : competitors.length > 0 ? (
+            <p>Učitavanje takmičara...</p>
+          ) : (
             competitors
               .filter((comp) => !selectedCompetitors.includes(comp._id))
               .map((competitor) => (
-                <div key={competitor._id} className="competitor-item">
-                  <button
+                <CompetitorItem key={competitor._id}>
+                  <AddButton
                     onClick={() => handleAddCompetitor(competitor._id)}
-                    className="add-button"
                   >
-                    <AiOutlinePlus size={16} />
-                  </button>
+                    <AiOutlinePlus />
+                  </AddButton>
                   <span>{`${competitor.firstName} ${competitor.lastName}`}</span>
-                </div>
+                </CompetitorItem>
               ))
-          ) : (
-            <p>No competitors available</p>
           )}
-        </div>
+        </ListContainer>
 
-        <div className="selected-competitors-list">
-          <h4>Selected Competitors:</h4>
-          {selectedCompetitors.map((id) => {
-            const competitor = users.find((user) => user._id === id);
-            return (
-              <div key={id} className="competitor-item">
-                <button
-                  onClick={() => handleRemoveCompetitor(id)}
-                  className="remove-button"
-                >
-                  -
-                </button>
-                <span>
-                  {competitor
-                    ? `${competitor.firstName} ${competitor.lastName}`
-                    : "Unknown Competitor"}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+        <ListContainer>
+          <ListTitle>Izabrani takmičari:</ListTitle>
+          {selectedCompetitors.map((id) => (
+            <CompetitorItem key={id}>
+              <AddButton onClick={() => handleRemoveCompetitor(id)}>
+                -
+              </AddButton>
+              <span>{users.find((user) => user._id === id)?.firstName}</span>
+            </CompetitorItem>
+          ))}
+        </ListContainer>
+      </CompetitorsContainer>
 
-      {/* Coaches Selection (only for admin) */}
       {role === "admin" && (
-        <div className="coaches-container">
-          <div className="coaches-list">
-            <h4>Available Coaches:</h4>
-            {usersLoading ? (
-              <p>Loading coaches...</p>
-            ) : coaches.length > 0 ? (
-              coaches.map((coach) => (
-                <div key={coach._id} className="competitor-item">
-                  <button
-                    onClick={() => handleAddCoach(coach._id)}
-                    className="add-button"
-                    disabled={!!selectedCoach}
-                  >
-                    <AiOutlinePlus size={16} />
-                  </button>
-                  <span>{`${coach.firstName} ${coach.lastName}`}</span>
-                </div>
-              ))
-            ) : (
-              <p>No coaches available</p>
-            )}
-          </div>
+        <CompetitorsContainer>
+          <ListContainer>
+            <ListTitle>Dostupni treneri:</ListTitle>
+            {coaches.map((coach) => (
+              <CompetitorItem key={coach._id}>
+                <AddButton
+                  onClick={() => handleAddCoach(coach._id)}
+                  disabled={!!selectedCoach}
+                >
+                  <AiOutlinePlus />
+                </AddButton>
+                <span>{`${coach.firstName} ${coach.lastName}`}</span>
+              </CompetitorItem>
+            ))}
+          </ListContainer>
 
-          <div className="selected-coach-list">
-            <h4>Selected Coach:</h4>
-            {selectedCoach ? (
-              <div className="competitor-item">
-                <button onClick={handleRemoveCoach} className="remove-button">
-                  -
-                </button>
+          <ListContainer>
+            <ListTitle>Izabrani trener:</ListTitle>
+            {selectedCoach && (
+              <CompetitorItem>
+                <AddButton onClick={handleRemoveCoach}>-</AddButton>
                 <span>
-                  {users.find((user) => user._id === selectedCoach)
-                    ?.firstName ?? "Unknown Coach"}
+                  {users.find((user) => user._id === selectedCoach)?.firstName}
                 </span>
-              </div>
-            ) : (
-              <p>No coach selected</p>
+              </CompetitorItem>
             )}
-          </div>
-        </div>
+          </ListContainer>
+        </CompetitorsContainer>
       )}
 
-      {/* Buttons */}
-      <div className="form-actions">
-        <button onClick={handleAssignPlan} className="btn-assign">
-          Assign Plan
-        </button>
-        <button onClick={() => navigate("/")} className="btn-cancel">
-          Cancel
-        </button>
-      </div>
-    </div>
+      <FormActions>
+        <Button onClick={handleAssignPlan}>Dodeli plan</Button>
+        <Button style={{ marginLeft: "1rem" }} onClick={() => navigate("/")}>
+          Otkaži
+        </Button>
+      </FormActions>
+    </Container>
   );
 };
 

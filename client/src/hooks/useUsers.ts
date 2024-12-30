@@ -59,9 +59,14 @@ export const useUsers = () => {
 
   const updateUser = async (id: string, updates: UpdateUserData) => {
     try {
-      await dispatch(updateUserDetails({ id, updates })).unwrap();
+      const updatedUser = await dispatch(
+        updateUserDetails({ id, updates })
+      ).unwrap();
+      dispatch(fetchCurrentUser()); // Refetch user to ensure Redux state is up to date
+      return updatedUser;
     } catch (err) {
       console.error("Failed to update user details:", err);
+      throw err;
     }
   };
 

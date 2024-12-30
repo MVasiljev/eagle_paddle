@@ -1,149 +1,103 @@
-import { useState } from "react";
+/** @jsxImportSource @emotion/react */
+import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { Duration } from "./Duration";
 import { Intensity } from "./Intensity";
 import { TrainingSegment } from "./TrainingSegment";
-import "./TrainingPlan.css";
 import { GymSegmentInput } from "./GymSegmentInput";
 import { useDispatch } from "react-redux";
 import { saveTrainingPlan } from "../../../../redux/slices/trainingPlanSlice";
 import { AppDispatch } from "../../../../redux/store";
-import { Plan, Segment, GymSegment } from "./types";
+import { Plan, ExerciseSegment } from "./types";
+import { SubHeading } from "../../../../components/Auth/loginForm.style";
+import { Heading } from "../../../Home/Home.styles";
+import {
+  Button,
+  ButtonContainer,
+  Container,
+  Input,
+  ModalContent,
+} from "./TrainingPlan.styles";
+import { useTrainingTypes } from "../../../../hooks/useTrainingTypes";
 
 Modal.setAppElement("#root");
 
 const TrainingPlan = () => {
   const [trainingPlans, setTrainingPlans] = useState<Plan[]>([
-    { planName: "Plan 1", segments: [], gymSegments: [] },
+    { planName: "Plan 1", exercises: [] },
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<string>("");
   const dispatch = useDispatch<AppDispatch>();
-  const trainingCategories = [
-    {
-      id: "1",
-      name: "Izdržljivost",
-      subcategories: [
-        { id: "1-1", name: "Aerobna baza" },
-        { id: "1-2", name: "Tempo" },
-        { id: "1-3", name: "Dugi intervali" },
-      ],
-    },
-    {
-      id: "2",
-      name: "Anaerobni",
-      subcategories: [
-        { id: "2-1", name: "Intervali za toleranciju laktata" },
-        { id: "2-2", name: "Anaerobna snaga" },
-        { id: "2-3", name: "Prelomljeni intervali" },
-      ],
-    },
-    {
-      id: "3",
-      name: "Brzina",
-      subcategories: [
-        { id: "3-1", name: "Kratki intervalni sprintovi" },
-        { id: "3-2", name: "Intervali u trkačkom ritmu" },
-        { id: "3-3", name: "Vežbe startova" },
-      ],
-    },
-    {
-      id: "4",
-      name: "Snaga",
-      subcategories: [
-        { id: "4-1", name: "Eksplozivni startovi" },
-        { id: "4-2", name: "Maksimalni sprintovi" },
-        { id: "4-3", name: "Veslanje sa otporom" },
-      ],
-    },
-    {
-      id: "5",
-      name: "Brzinska izdržljivost",
-      subcategories: [
-        { id: "5-1", name: "Piramida intervala" },
-        { id: "5-2", name: "Mešani intervali" },
-        { id: "5-3", name: "Modeli Cross-trening (trčanje/bajs/plivanje)" },
-      ],
-    },
-    {
-      id: "6",
-      name: "Tehnika",
-      subcategories: [
-        { id: "6-1", name: "Vežbe za efikasnost zaveslaja" },
-        { id: "6-2", name: "Vežbe za ravnotežu i stabilnost" },
-      ],
-    },
-    {
-      id: "7",
-      name: "Trka",
-      subcategories: [
-        { id: "7-1", name: "Tempo trke" },
-        { id: "7-2", name: "Aktivni oporavak veslanjem" },
-      ],
-    },
-  ];
+
+  const { types: trainingTypes, getTrainingTypes } = useTrainingTypes();
+
+  useEffect(() => {
+    getTrainingTypes(); // Fetch all training types on component mount
+  }, []);
+
+  const trainingCategories = trainingTypes
+    .filter((type) => type.variant === "standard")
+    .map((type) => ({
+      id: type._id,
+      name: type.name,
+      subcategories: type.categories.map((cat) => ({
+        id: `${type._id}-${cat}`,
+        name: cat,
+      })),
+    }));
 
   const addTrainingSegment = (planIndex: number) => {
-    const newSegment: Segment = {
-      name: "New Segment",
+    const newSegment: ExerciseSegment = {
+      name: "Novi Segment",
+      variant: "standard",
       type: "",
       category: "",
       durations: [{ duration: 60, unit: "s" }],
       unit: "s",
-      intensityType: "Single Value",
+      intensityType: "single",
       intensities: [{ value: "", duration: "", technique: "" }],
-      seriesCount: 1,
-      segmentCount: 1,
-      pauseAfterSeries: 0,
-      pauseAfterSegment: 0,
+      series: 1,
+      repetitions: 1,
+      restBetweenSeries: 0,
+      restBetweenRepetitions: 0,
     };
 
     const updatedPlans = [...trainingPlans];
-    updatedPlans[planIndex].segments.push(newSegment);
+    updatedPlans[planIndex].exercises.push(newSegment);
     setTrainingPlans(updatedPlans);
   };
 
   const addGymSegment = (planIndex: number) => {
-    const newGymSegment: GymSegment = {
-      name: "New Gym Segment",
-      type: "", // Initially empty to select Cardio or Strength
+    const newGymSegment: ExerciseSegment = {
+      name: "Novi Gym Segment",
+      variant: "gym",
+      type: "",
       category: "",
-      reps: undefined, // Specific to Strength
-      weight: undefined, // Specific to Strength
-      sets: undefined, // Specific to Strength
-      pauseBetweenSets: undefined, // Specific to Strength
-      duration: undefined, // Specific to Cardio
-      distance: undefined, // Specific to Cardio
-      intensity: undefined, // Specific to Cardio
-      restTime: undefined, // Specific to Cardio
+      reps: undefined,
+      weight: undefined,
+      sets: undefined,
+      pauseBetweenSets: undefined,
+      duration: undefined,
+      distance: undefined,
+      intensity: undefined,
+      exercise: "",
     };
 
     const updatedPlans = [...trainingPlans];
-    updatedPlans[planIndex].gymSegments.push(newGymSegment);
+    updatedPlans[planIndex].exercises.push(newGymSegment);
     setTrainingPlans(updatedPlans);
   };
 
   const updateSegment = (
     planIndex: number,
     segmentIndex: number,
-    updatedSegment: Segment
+    updatedSegment: ExerciseSegment
   ) => {
     setTrainingPlans((prevPlans) => {
       const updatedPlans = [...prevPlans];
-      updatedPlans[planIndex].segments[segmentIndex] = updatedSegment;
-      return updatedPlans;
-    });
-  };
-
-  const updateGymSegment = (
-    planIndex: number,
-    gymSegmentIndex: number,
-    updatedGymSegment: GymSegment
-  ) => {
-    setTrainingPlans((prevPlans) => {
-      const updatedPlans = [...prevPlans];
-      updatedPlans[planIndex].gymSegments[gymSegmentIndex] = updatedGymSegment;
+      updatedPlans[planIndex].exercises[segmentIndex] = updatedSegment;
       return updatedPlans;
     });
   };
@@ -151,36 +105,28 @@ const TrainingPlan = () => {
   const handlePreview = () => {
     const formattedPlans = trainingPlans.map((plan) => ({
       name: plan.planName,
-      exercises: [
-        ...plan.segments.map((segment) => ({
-          name: segment.name,
-          variant: "standard",
-          type: segment.type || "Endurance",
-          category: segment.category || "default",
-          unit: segment.unit,
-          intensityType: segment.intensityType,
-          durations: segment.durations,
-          intensities: segment.intensities,
-          series: segment.seriesCount,
-          repetitions: segment.segmentCount,
-          restBetweenSeries: segment.pauseAfterSeries,
-          restBetweenRepetitions: segment.pauseAfterSegment,
-        })),
-        ...plan.gymSegments.map((gymSegment) => ({
-          name: gymSegment.name,
-          variant: gymSegment.type === "Strength" ? "strength" : "cardio",
-          type: gymSegment.type,
-          category: gymSegment.category || "default",
-          reps: gymSegment.reps,
-          weight: gymSegment.weight,
-          sets: gymSegment.sets,
-          pauseBetweenSets: gymSegment.pauseBetweenSets,
-          duration: gymSegment.duration, // Cardio-specific
-          distance: gymSegment.distance, // Cardio-specific
-          intensity: gymSegment.intensity, // Cardio-specific
-          restTime: gymSegment.restTime, // Cardio-specific
-        })),
-      ],
+      exercises: plan.exercises.map((segment) => ({
+        name: segment.name,
+        variant: segment.variant,
+        type: segment.type || "Endurance",
+        category: segment.category || "default",
+        unit: segment.unit,
+        intensityType: segment.intensityType,
+        durations: segment.durations,
+        intensities: segment.intensities,
+        series: segment.series,
+        repetitions: segment.repetitions,
+        restBetweenSeries: segment.restBetweenSeries,
+        restBetweenRepetitions: segment.restBetweenRepetitions,
+        reps: segment.reps,
+        weight: segment.weight,
+        sets: segment.sets,
+        pauseBetweenSets: segment.pauseBetweenSets,
+        duration: segment.duration,
+        distance: segment.distance,
+        intensity: segment.intensity,
+        exercise: segment.exercise,
+      })),
     }));
 
     setModalContent(JSON.stringify(formattedPlans, null, 2));
@@ -193,23 +139,25 @@ const TrainingPlan = () => {
     try {
       const resultAction = await dispatch(saveTrainingPlan(formattedPlans));
       if (saveTrainingPlan.fulfilled.match(resultAction)) {
-        alert("Training plans saved successfully!");
+        alert("Planovi treninga su uspešno sačuvani!");
       } else {
-        alert(`Error: ${resultAction.payload}`);
+        alert(`Greška: ${resultAction.payload}`);
       }
     } catch (error) {
-      console.error("Unexpected error saving training plans:", error);
+      console.error(
+        "Neočekivana greška prilikom čuvanja planova treninga:",
+        error
+      );
     } finally {
       setIsModalOpen(false);
     }
   };
 
   return (
-    <div className="dashboard-container">
-      <h2>Create a New Training Plan</h2>
+    <Container>
       {trainingPlans.map((plan, planIndex) => (
         <div key={planIndex}>
-          <input
+          <Input
             type="text"
             value={plan.planName}
             onChange={(e) => {
@@ -218,78 +166,91 @@ const TrainingPlan = () => {
               setTrainingPlans(updatedPlans);
             }}
           />
-          <h3>Standard Segments</h3>
-          {plan.segments.map((segment, segmentIndex) => (
-            <div key={segmentIndex}>
-              <TrainingSegment
+          <SubHeading>Standardni Segmenti</SubHeading>
+          {plan.exercises
+            .filter((segment) => segment.variant === "standard")
+            .map((segment, segmentIndex) => (
+              <div key={segmentIndex}>
+                <TrainingSegment
+                  segment={segment}
+                  onUpdate={(updatedSegment) =>
+                    updateSegment(planIndex, segmentIndex, updatedSegment)
+                  }
+                  trainingCategories={trainingCategories}
+                />
+                {segment.type && segment.category && (
+                  <>
+                    <Duration
+                      initialDurations={segment.durations}
+                      onDurationsChange={(values) => {
+                        const updatedSegment = {
+                          ...segment,
+                          durations: values.durations.map((d) => ({
+                            duration: d.duration,
+                            unit: d.unit as "m" | "km" | "s" | "min", // Explicitly cast the unit
+                          })),
+                        };
+                        updateSegment(planIndex, segmentIndex, updatedSegment);
+                      }}
+                    />
+                    <Intensity
+                      initialIntensityType={segment.intensityType}
+                      initialIntensities={segment.intensities}
+                      initialUnit={segment.unit as "m" | "km" | "s" | "min"} // Ensure unit is cast to match the expected type
+                      onIntensitiesChange={(data) => {
+                        const updatedSegment = {
+                          ...segment,
+                          intensityType: data.intensityType as
+                            | "single"
+                            | "multiple"
+                            | "time-intensity"
+                            | "technique-time-intensity",
+                          intensities: data.intensities,
+                          unit: data.unit as "m" | "km" | "s" | "min",
+                        };
+                        updateSegment(planIndex, segmentIndex, updatedSegment);
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+            ))}
+
+          <SubHeading>Gym Segmenti</SubHeading>
+          {plan.exercises
+            .filter((segment) => segment.variant === "gym")
+            .map((segment, gymSegmentIndex) => (
+              <GymSegmentInput
+                key={gymSegmentIndex}
                 segment={segment}
-                onUpdate={(updatedSegment) =>
-                  updateSegment(planIndex, segmentIndex, updatedSegment)
+                onUpdate={(updatedGymSegment) =>
+                  updateSegment(planIndex, gymSegmentIndex, updatedGymSegment)
                 }
-                trainingCategories={trainingCategories}
               />
+            ))}
 
-              {/* Conditionally show Duration and Intensity based on selected type and category */}
-              {segment.type && segment.category && (
-                <>
-                  <Duration
-                    initialDurations={segment.durations}
-                    onDurationsChange={(values) => {
-                      const updatedSegment = {
-                        ...segment,
-                        durations: values.durations,
-                      };
-                      updateSegment(planIndex, segmentIndex, updatedSegment);
-                    }}
-                  />
-                  <Intensity
-                    initialIntensityType={segment.intensityType}
-                    initialIntensities={segment.intensities}
-                    initialUnit={segment.unit}
-                    onIntensitiesChange={(data) => {
-                      const updatedSegment = {
-                        ...segment,
-                        intensityType: data.intensityType,
-                        intensities: data.intensities,
-                        unit: data.unit,
-                      };
-                      updateSegment(planIndex, segmentIndex, updatedSegment);
-                    }}
-                  />
-                </>
-              )}
-            </div>
-          ))}
-
-          <h3>Gym Segments</h3>
-          {plan.gymSegments.map((segment, gymSegmentIndex) => (
-            <GymSegmentInput
-              key={gymSegmentIndex}
-              segment={segment}
-              onUpdate={(updatedGymSegment) =>
-                updateGymSegment(planIndex, gymSegmentIndex, updatedGymSegment)
-              }
-            />
-          ))}
-
-          <button onClick={() => addTrainingSegment(planIndex)}>
-            Add Standard Segment
-          </button>
-          <button onClick={() => addGymSegment(planIndex)}>
-            Add Gym Segment
-          </button>
+          <ButtonContainer>
+            <Button onClick={() => addTrainingSegment(planIndex)}>
+              Dodaj Standardni Segment
+            </Button>
+            <Button onClick={() => addGymSegment(planIndex)}>
+              Dodaj Gym Segment
+            </Button>
+          </ButtonContainer>
         </div>
       ))}
 
-      <button onClick={handlePreview}>Preview & Save</button>
+      <Button onClick={handlePreview}>Pregledaj i sačuvaj</Button>
 
       <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)}>
-        <h2>Training Plan Summary</h2>
-        <pre>{modalContent}</pre>
-        <button onClick={handleConfirmSave}>Confirm</button>
-        <button onClick={() => setIsModalOpen(false)}>Back</button>
+        <ModalContent>
+          <Heading>Pregled Plana Treninga</Heading>
+          <pre>{modalContent}</pre>
+          <Button onClick={handleConfirmSave}>Potvrdi</Button>
+          <Button onClick={() => setIsModalOpen(false)}>Nazad</Button>
+        </ModalContent>
       </Modal>
-    </div>
+    </Container>
   );
 };
 

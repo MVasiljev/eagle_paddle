@@ -1,20 +1,47 @@
+/** @jsxImportSource @emotion/react */
 import React, { useState } from "react";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import * as yup from "yup";
+import {
+  FormWrapper,
+  Heading,
+  SubHeading,
+  Form,
+  InputGroup,
+  Icon,
+  Input,
+  EyeIcon,
+  ErrorMessage,
+  Button,
+  CheckboxGroup,
+  Checkbox,
+  CheckboxLabel,
+  ForgotPasswordLink,
+  ToggleButton,
+} from "./loginForm.style";
 
 // Yup schema for validation
 const loginSchema = yup.object().shape({
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup.string().required("Password is required"),
+  email: yup.string().email("Pogrešan email").required("Email je obavezan"),
+  password: yup.string().required("Lozinka je obavezna"),
 });
 
 interface LoginFormProps {
-  onSubmit: (data: { email: string; password: string }) => void;
+  onSubmit: (data: {
+    email: string;
+    password: string;
+    rememberMe: boolean;
+  }) => void;
+  onToggleRegister?: () => void; // Optional callback for toggling to register
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
+const LoginForm: React.FC<LoginFormProps> = ({
+  onSubmit,
+  onToggleRegister,
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
@@ -39,7 +66,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
     e.preventDefault();
     const isValid = await handleValidation();
     if (isValid) {
-      onSubmit({ email, password });
+      onSubmit({ email, password, rememberMe });
     }
   };
 
@@ -48,44 +75,70 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Email Input */}
-      <div className="input-group">
-        <FaEnvelope className="icon" />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="input"
-        />
-        {errors.email && <p className="error">{errors.email}</p>}
-      </div>
+    <FormWrapper>
+      <Heading>Prijavite se</Heading>
+      <SubHeading>
+        Dobrodošli! Molimo vas da se prijavite na svoj nalog.
+      </SubHeading>
+      <Form onSubmit={handleSubmit}>
+        {/* Email Input */}
+        <InputGroup>
+          <Icon>
+            <FaEnvelope />
+          </Icon>
+          <Input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </InputGroup>
+        {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
 
-      {/* Password Input */}
-      <div className="input-group">
-        <FaLock className="icon" />
-        <input
-          type={passwordVisible ? "text" : "password"}
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input"
-        />
-        <div
-          className="eye-icon"
-          onClick={togglePasswordVisibility}
-          style={{ cursor: "pointer" }}
-        >
-          {passwordVisible ? <FaEyeSlash /> : <FaEye />}
-        </div>
-        {errors.password && <p className="error">{errors.password}</p>}
-      </div>
+        {/* Password Input */}
+        <InputGroup>
+          <Icon>
+            <FaLock />
+          </Icon>
+          <Input
+            type={passwordVisible ? "text" : "password"}
+            placeholder="Lozinka"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <EyeIcon onClick={togglePasswordVisibility}>
+            {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+          </EyeIcon>
+        </InputGroup>
+        {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
 
-      <button type="submit" className="btn">
-        Log In
-      </button>
-    </form>
+        {/* Remember Me Checkbox */}
+        <CheckboxGroup>
+          <Checkbox
+            type="checkbox"
+            id="rememberMe"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+          />
+          <CheckboxLabel htmlFor="rememberMe">Zapamti me</CheckboxLabel>
+        </CheckboxGroup>
+
+        <Button type="submit">Prijavi se</Button>
+      </Form>
+
+      <ForgotPasswordLink href="/forgot-password">
+        Zaboravili ste lozinku?
+      </ForgotPasswordLink>
+      <ToggleButton
+        onClick={(e) => {
+          e.preventDefault();
+          if (onToggleRegister) onToggleRegister();
+        }}
+        href="#"
+      >
+        Nemate nalog? Registrujte se
+      </ToggleButton>
+    </FormWrapper>
   );
 };
 

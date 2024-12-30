@@ -1,31 +1,51 @@
 import React, { useEffect, useState } from "react";
-import "./AdminDashboard.css";
-import "./Modal.css"; // Add this for modal styling
-import SearchBar from "../../../components/SearchBar/SearchBar";
-import Calendar from "../../../components/Calendar/Calendar";
-import { DateClickArg } from "@fullcalendar/interaction/index.js";
+import { DateClickArg } from "@fullcalendar/interaction";
 import { EventClickArg, EventInput } from "@fullcalendar/core";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import Calendar from "../../../components/Calendar/Calendar";
+import SearchBar from "../../../components/SearchBar/SearchBar";
+import TrainingResultsForm from "./components/TrainingResultsForm";
+import MentalHealthForm from "./components/MentalHealthForm";
+import {
+  DashboardContainer,
+  MainContent,
+  SearchBarWrapper,
+  CalendarWrapper,
+  ContentCenter,
+} from "./CompetitorDashboard.styles";
+import { Views } from "../../../constants/views";
+import { setView } from "../../../redux/slices/viewSlice";
+import MyMentalHealthList from "./components/MyMentalHealthList";
 import { useTrainingSessions } from "../../../hooks/useTrainingSession";
-import { TrainingSession } from "../../../types/types"; // Import your types
+import TrainingReport from "../shared/TrainingReport/TrainingReport";
+import { TrainingResultsFormData } from "../../../types/types";
+import MyProfile from "./components/MyProfile/MyProfile";
 
 const CompetitorDashboard: React.FC = () => {
-  const { sessions, status, updateSession } = useTrainingSessions();
+  const {
+    sessions,
+    updateResults,
+    getMySessions, // Fetch sessions again to refresh list
+  } = useTrainingSessions();
 
   const [events, setEvents] = useState<EventInput[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSession, setSelectedSession] =
-    useState<TrainingSession | null>(null);
-  const [showDetails, setShowDetails] = useState(true); // Toggle between details and completion form
-  const [results, setResults] = useState({
-    HRrest: "",
-    duration: "",
-    distance: "",
-    RPE: "",
-    HRavg: "",
-    HRmax: "",
-  });
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  );
+  const selectedSession = sessions.find(
+    (session) => session._id === selectedSessionId
+  );
+  const view = useSelector((state: RootState) => state.dashboard.view);
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth); // Get logged-in user
 
-  // Transform sessions into FullCalendar-compatible events
+  // Fetch sessions on mount
+  useEffect(() => {
+    getMySessions();
+  }, []);
+
+  // Format sessions to FullCalendar events
   useEffect(() => {
     if (sessions && sessions.length > 0) {
       const formattedEvents = sessions.map((session) => ({
@@ -42,231 +62,91 @@ const CompetitorDashboard: React.FC = () => {
   }, [sessions]);
 
   const handleEventClick = (eventData: EventClickArg) => {
-    const session = sessions.find((s) => s._id === eventData.event.id);
-    if (session) {
-      setSelectedSession(session);
-      setShowDetails(true); // Default to showing plan details
-      setIsModalOpen(true);
-    }
-  };
+    const eventStatus = eventData.event.extendedProps.status;
 
-  const handleCompleteSession = async () => {
-    if (!selectedSession) return;
-
-    try {
-      await updateSession(selectedSession._id || "", {
-        results: { ...results, timeInZones: [] },
-        status: "completed",
-      });
-      setIsModalOpen(false);
-      setSelectedSession(null);
-      setResults({
-        HRrest: "",
-        duration: "",
-        distance: "",
-        RPE: "",
-        HRavg: "",
-        HRmax: "",
-      });
-    } catch (error) {
-      console.error("Error completing session:", error);
+    if (eventStatus === "completed") {
+      dispatch(setView(Views.TRAINING_RESULTS)); // New view for completed results
+    } else {
+      dispatch(setView(Views.TRAINING_RESULTS_EDIT)); // Edit for upcoming
     }
+
+    setSelectedSessionId(eventData.event.id);
   };
 
   const handleDateClick = (dateData: DateClickArg) => {
     console.log("Date clicked:", dateData);
   };
-  const renderJson = (
-    data: Record<string, any>,
-    level: number = 0
-  ): JSX.Element[] | JSX.Element => {
-    return Object.entries(data)
-      .filter(([key]) => key !== "_id") // Exclude keys with "_id"
-      .map(([key, value]) => (
-        <div
-          key={`${key}-${level}`}
-          className="json-row"
-          style={{ marginLeft: `${level * 20}px` }}
-        >
-          <span className="json-key">{key}:</span>
-          {typeof value === "object" && value !== null ? (
-            Array.isArray(value) ? (
-              <span className="json-value">
-                [
-                {value.map((item, index) => (
-                  <div key={`${key}-${index}`} className="json-array-item">
-                    {renderJson(item, level + 1)}
-                  </div>
-                ))}
-                ]
-              </span>
-            ) : (
-              <div className="json-value">{renderJson(value, level + 1)}</div>
-            )
-          ) : (
-            <span className="json-value">{value?.toString()}</span>
-          )}
-        </div>
-      ));
+
+  const handleSubmitResults = async (results: TrainingResultsFormData) => {
+    if (!selectedSessionId) return;
+
+    try {
+      // Update results using hook
+      await updateResults(
+        selectedSessionId,
+        results as unknown as Record<string, unknown>
+      );
+
+      // Update the calendar to reflect completed status
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === selectedSessionId
+            ? {
+                ...event,
+                extendedProps: {
+                  ...event.extendedProps,
+                  status: "completed",
+                  results,
+                },
+              }
+            : event
+        )
+      );
+
+      alert("Results successfully submitted!");
+      dispatch(setView(Views.CALENDAR));
+      setSelectedSessionId(null);
+    } catch (error) {
+      console.error("Error submitting results:", error);
+      alert("Failed to submit results.");
+    }
   };
 
   return (
-    <div className="dashboard-container">
-      {/* Search Bar */}
-      <SearchBar onSearch={(query) => console.log(query)} />
-
-      {/* Calendar */}
-      {status === "loading" ? (
-        <p>Loading sessions...</p>
-      ) : (
-        <Calendar
-          onEventClick={handleEventClick}
-          onDateClick={handleDateClick}
-          events={events}
-        />
-      )}
-
-      {/* Modal */}
-      {isModalOpen && selectedSession && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>{selectedSession.plan?.name || "Session Details"}</h2>
-            <p>Date: {new Date(selectedSession.date).toLocaleDateString()}</p>
-            <p>Status: {selectedSession.status}</p>
-
-            {selectedSession.status === "completed" ? (
-              <div className="modal-body">
-                <p>
-                  <strong>HR Rest:</strong>{" "}
-                  {selectedSession.results?.HRrest as string}
-                </p>
-                <p>
-                  <strong>Duration:</strong>{" "}
-                  {selectedSession.results?.duration as string} minutes
-                </p>
-                <p>
-                  <strong>Distance:</strong>{" "}
-                  {selectedSession.results?.distance as string} meters
-                </p>
-                <p>
-                  <strong>RPE:</strong> {selectedSession.results?.RPE as string}
-                </p>
-                <p>
-                  <strong>HR Avg:</strong>{" "}
-                  {selectedSession.results?.HRavg as string}
-                </p>
-                <p>
-                  <strong>HR Max:</strong>{" "}
-                  {selectedSession.results?.HRmax as string}
-                </p>
-              </div>
-            ) : (
-              <div className="modal-body">
-                {showDetails ? (
-                  <div>
-                    <h3>Plan Details</h3>
-                    <p>Plan Name: {selectedSession.plan?.name}</p>
-                    <div className="json-display">
-                      {renderJson(selectedSession.plan || {})}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="HR Rest"
-                      value={results.HRrest}
-                      onChange={(e) =>
-                        setResults((prev) => ({
-                          ...prev,
-                          HRrest: e.target.value,
-                        }))
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="Duration (min)"
-                      value={results.duration}
-                      onChange={(e) =>
-                        setResults((prev) => ({
-                          ...prev,
-                          duration: e.target.value,
-                        }))
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="Distance (m)"
-                      value={results.distance}
-                      onChange={(e) =>
-                        setResults((prev) => ({
-                          ...prev,
-                          distance: e.target.value,
-                        }))
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="RPE (1-10)"
-                      value={results.RPE}
-                      onChange={(e) =>
-                        setResults((prev) => ({ ...prev, RPE: e.target.value }))
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="HR Avg"
-                      value={results.HRavg}
-                      onChange={(e) =>
-                        setResults((prev) => ({
-                          ...prev,
-                          HRavg: e.target.value,
-                        }))
-                      }
-                    />
-                    <input
-                      type="text"
-                      placeholder="HR Max"
-                      value={results.HRmax}
-                      onChange={(e) =>
-                        setResults((prev) => ({
-                          ...prev,
-                          HRmax: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="modal-footer">
-              {selectedSession.status === "completed" ? (
-                <button onClick={() => setIsModalOpen(false)}>Close</button>
-              ) : (
-                <>
-                  {showDetails ? (
-                    <button onClick={() => setShowDetails(false)}>
-                      Populate Results
-                    </button>
-                  ) : (
-                    <button onClick={() => setShowDetails(true)}>
-                      View Plan Details
-                    </button>
-                  )}
-                  {!showDetails && (
-                    <button onClick={handleCompleteSession}>
-                      Complete Training
-                    </button>
-                  )}
-                  <button onClick={() => setIsModalOpen(false)}>Cancel</button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <DashboardContainer>
+      <MainContent>
+        {view === Views.CALENDAR || !view ? (
+          <ContentCenter>
+            <SearchBarWrapper>
+              <SearchBar onSearch={(query) => console.log(query)} />
+            </SearchBarWrapper>
+            <CalendarWrapper>
+              <Calendar
+                onEventClick={handleEventClick}
+                onDateClick={handleDateClick}
+                events={events}
+              />
+            </CalendarWrapper>
+          </ContentCenter>
+        ) : view === Views.MENTAL_HEALTH_CREATE ? (
+          <MentalHealthForm />
+        ) : view === Views.MY_MENTAL_HEALTH_HISTORY ? (
+          <MyMentalHealthList />
+        ) : view === Views.TRAINING_RESULTS ? (
+          <TrainingReport session={selectedSession} user={user} />
+        ) : view === Views.MY_PROFILE ? (
+          <MyProfile />
+        ) : view === Views.TRAINING_RESULTS_EDIT ? (
+          <TrainingResultsForm
+            onSubmit={handleSubmitResults}
+            onBack={() => {
+              setSelectedSessionId(null);
+              dispatch(setView(Views.CALENDAR));
+            }}
+          />
+        ) : null}
+      </MainContent>
+    </DashboardContainer>
   );
 };
 

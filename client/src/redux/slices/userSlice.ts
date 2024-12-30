@@ -89,9 +89,12 @@ export const updateUserDetails = createAsyncThunk(
   ) => {
     try {
       const { id, updates } = params;
+
       const response = await axios.put(`${API_URL}/${id}`, updates, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
+
+      console.log("[User] Updated:", response.data);
       return response.data;
     } catch (error: unknown) {
       return rejectWithValue(extractErrorMessage(error));
@@ -212,6 +215,8 @@ const userSlice = createSlice({
     builder.addCase(updateUserDetails.fulfilled, (state, action) => {
       state.isLoading = false;
       state.user = action.payload;
+      localStorage.setItem("user", JSON.stringify(action.payload));
+      console.log("[User] Local storage updated:", action.payload);
     });
     builder.addCase(updateUserDetails.rejected, (state, action) => {
       state.isLoading = false;

@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react";
-import { Segment, TrainingCategory } from "./types";
+import { ExerciseSegment, TrainingCategory } from "./types";
+import {
+  SegmentContainer,
+  SegmentHeader,
+  SegmentField,
+  Label,
+  Input,
+  Select,
+} from "./TrainingSegment.styles";
 
 interface SegmentProps {
-  segment: Segment;
-  onUpdate: (updatedSegment: Segment) => void;
+  segment: ExerciseSegment;
+  onUpdate: (updatedSegment: ExerciseSegment) => void;
   trainingCategories: TrainingCategory[];
 }
 
@@ -30,9 +38,9 @@ export const TrainingSegment = ({
     setFilteredCategories(selectedType?.subcategories || []);
   }, [localSegment.type, trainingCategories]);
 
-  const handleChange = <K extends keyof Segment>(
+  const handleChange = <K extends keyof ExerciseSegment>(
     field: K,
-    value: Segment[K]
+    value: ExerciseSegment[K]
   ) => {
     const updatedSegment = { ...localSegment, [field]: value };
     setLocalSegment(updatedSegment);
@@ -40,109 +48,176 @@ export const TrainingSegment = ({
   };
 
   return (
-    <div style={{ marginBottom: "1rem" }}>
-      <h4>Training Segment</h4>
+    <SegmentContainer>
+      <SegmentHeader>Trening Segment</SegmentHeader>
 
       {/* Segment Name */}
-      <div style={{ marginBottom: "0.5rem" }}>
-        <label style={{ marginRight: "1rem" }}>Segment Name:</label>
-        <input
+      <SegmentField>
+        <Label>Ime Segmenta:</Label>
+        <Input
           type="text"
           value={localSegment.name}
           onChange={(e) => handleChange("name", e.target.value)}
-          placeholder="Segment Name"
+          placeholder="Ime Segmenta"
         />
-      </div>
+      </SegmentField>
+
+      {/* Variant Selection (Standard/Gym) */}
+      {/* <SegmentField> */}
+      {/* <Label>Varijanta:</Label>
+        <Select
+          value={localSegment.variant}
+          onChange={(e) =>
+            handleChange("variant", e.target.value as "standard" | "gym")
+          }
+        >
+          <option value="">Izaberite Varijantu</option>
+          <option value="standard">Standard</option>
+          <option value="gym">Gym</option>
+        </Select>
+      </SegmentField> */}
 
       {/* Type Selection */}
-      <div style={{ marginBottom: "0.5rem" }}>
-        <label style={{ marginRight: "1rem" }}>Type:</label>
-        <select
+      <SegmentField>
+        <Label>Tip:</Label>
+        <Select
           value={localSegment.type}
           onChange={(e) => handleChange("type", e.target.value)}
         >
-          <option value="">Select Type</option>
+          <option value="">Izaberite Tip</option>
           {trainingCategories.map((category) => (
             <option key={category.id} value={category.name}>
               {category.name}
             </option>
           ))}
-        </select>
-      </div>
+        </Select>
+      </SegmentField>
 
       {/* Category Selection */}
-      <div style={{ marginBottom: "0.5rem" }}>
-        <label style={{ marginRight: "1rem" }}>Category:</label>
-        <select
+      <SegmentField>
+        <Label>Kategorija:</Label>
+        <Select
           value={localSegment.category}
           onChange={(e) => handleChange("category", e.target.value)}
           disabled={!localSegment.type}
         >
-          <option value="">Select Category</option>
+          <option value="">Izaberite Kategoriju</option>
           {filteredCategories.map((sub) => (
             <option key={sub.id} value={sub.name}>
               {sub.name}
             </option>
           ))}
-        </select>
-      </div>
+        </Select>
+      </SegmentField>
 
       {/* Additional Segment Inputs */}
       {localSegment.type && localSegment.category && (
         <>
-          <div style={{ marginBottom: "0.5rem" }}>
-            <label style={{ marginRight: "1rem" }}>Series Count:</label>
-            <input
-              type="number"
-              min="0"
-              value={localSegment.seriesCount}
-              onChange={(e) => handleChange("seriesCount", +e.target.value)}
-              placeholder="Series Count"
-            />
-          </div>
+          {/* Series (Standard Segment) */}
+          {localSegment.variant === "standard" && (
+            <>
+              <SegmentField>
+                <Label>Broj Serija:</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.series || 0}
+                  onChange={(e) => handleChange("series", +e.target.value)}
+                  placeholder="Broj Serija"
+                />
+              </SegmentField>
 
-          <div style={{ marginBottom: "0.5rem" }}>
-            <label style={{ marginRight: "1rem" }}>Segment Count:</label>
-            <input
-              type="number"
-              min="0"
-              value={localSegment.segmentCount}
-              onChange={(e) => handleChange("segmentCount", +e.target.value)}
-              placeholder="Segment Count"
-            />
-          </div>
+              <SegmentField>
+                <Label>Broj Ponavljanja:</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.repetitions || 0}
+                  onChange={(e) => handleChange("repetitions", +e.target.value)}
+                  placeholder="Broj Ponavljanja"
+                />
+              </SegmentField>
 
-          <div style={{ marginBottom: "0.5rem" }}>
-            <label style={{ marginRight: "1rem" }}>
-              Pause After Series (min):
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={localSegment.pauseAfterSeries}
-              onChange={(e) =>
-                handleChange("pauseAfterSeries", +e.target.value)
-              }
-              placeholder="Pause After Series (min)"
-            />
-          </div>
+              <SegmentField>
+                <Label>Pauza posle Serije (s):</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.restBetweenSeries || 0}
+                  onChange={(e) =>
+                    handleChange("restBetweenSeries", +e.target.value)
+                  }
+                  placeholder="Pauza posle Serije (s)"
+                />
+              </SegmentField>
 
-          <div style={{ marginBottom: "0.5rem" }}>
-            <label style={{ marginRight: "1rem" }}>
-              Pause After Segment (min):
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={localSegment.pauseAfterSegment}
-              onChange={(e) =>
-                handleChange("pauseAfterSegment", +e.target.value)
-              }
-              placeholder="Pause After Segment (min)"
-            />
-          </div>
+              <SegmentField>
+                <Label>Pauza posle Ponavljanja (s):</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.restBetweenRepetitions || 0}
+                  onChange={(e) =>
+                    handleChange("restBetweenRepetitions", +e.target.value)
+                  }
+                  placeholder="Pauza posle Ponavljanja (s)"
+                />
+              </SegmentField>
+            </>
+          )}
+
+          {/* Gym Segment Inputs */}
+          {localSegment.variant === "gym" && (
+            <>
+              <SegmentField>
+                <Label>Broj Setova:</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.sets || 0}
+                  onChange={(e) => handleChange("sets", +e.target.value)}
+                  placeholder="Broj Setova"
+                />
+              </SegmentField>
+
+              <SegmentField>
+                <Label>Ponavljanja:</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.reps || 0}
+                  onChange={(e) => handleChange("reps", +e.target.value)}
+                  placeholder="Ponavljanja"
+                />
+              </SegmentField>
+
+              <SegmentField>
+                <Label>Težina (kg):</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.weight || 0}
+                  onChange={(e) => handleChange("weight", +e.target.value)}
+                  placeholder="Težina (kg)"
+                />
+              </SegmentField>
+
+              <SegmentField>
+                <Label>Pauza između Setova (s):</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localSegment.pauseBetweenSets || 0}
+                  onChange={(e) =>
+                    handleChange("pauseBetweenSets", +e.target.value)
+                  }
+                  placeholder="Pauza između Setova (s)"
+                />
+              </SegmentField>
+            </>
+          )}
         </>
       )}
-    </div>
+    </SegmentContainer>
   );
 };

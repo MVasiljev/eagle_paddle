@@ -24,9 +24,8 @@ export const useTrainingSessions = () => {
 
   // Automatic fetching on instantiation
   useEffect(() => {
-    console.log(sessions);
     if (sessions.length === 0) {
-      dispatch(fetchMyTrainingSessions());
+      dispatch(fetchTrainingSessions());
     }
   }, [dispatch, sessions.length]);
 

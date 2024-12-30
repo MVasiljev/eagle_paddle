@@ -1,6 +1,16 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { MdAdd, MdDelete } from "react-icons/md";
-import "./Intensity.css";
+import {
+  IntensityContainer,
+  IntensityHeader,
+  InputLabel,
+  InputField,
+  SelectField,
+  IntensityItem,
+  Button,
+  AddButton,
+  CheckboxWrapper,
+} from "./IntensityStyles";
 
 interface IntensityProps {
   initialSegmentType?: string;
@@ -16,8 +26,8 @@ interface IntensityProps {
 }
 
 export const Intensity = ({
-  initialSegmentType = "vreme", // "vreme" (time) or "distance"
-  initialIntensityType = "single", // Default backend-compatible value
+  initialSegmentType = "vreme",
+  initialIntensityType = "single",
   initialIntensities = [{ value: "", duration: "", technique: "" }],
   initialUnit = "s",
   onIntensitiesChange,
@@ -32,33 +42,33 @@ export const Intensity = ({
     { label: "Single Value", value: "single" },
     { label: "By Segment", value: "multiple" },
     { label: "Time/Intensity", value: "time-intensity" },
-    { label: "Technique/Time/Intensity", value: "technique-time-intensity" },
+    { label: "Tehnika/Vreme/Intezitet", value: "technique-time-intensity" },
   ];
 
-  // Notify parent when changes occur
+  // Ensure state is consistent with intensity type on load
+  useEffect(() => {
+    if (intensityType === "single" && intensities.length === 0) {
+      setIntensities([{ value: "", duration: "", technique: "" }]);
+    }
+  }, [intensityType]);
+
   const notifyParent = () => {
     onIntensitiesChange({ segmentType, intensityType, intensities, unit });
   };
 
-  // Segment Type Change
   const handleSegmentTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSegmentType = e.target.value;
     setSegmentType(newSegmentType);
-
-    // Update unit based on segment type
     const newUnit = newSegmentType === "vreme" ? "s" : "m";
     setUnit(newUnit);
-
     notifyParent();
   };
 
-  // Unit Change
   const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setUnit(e.target.value);
     notifyParent();
   };
 
-  // Intensity Type Change
   const handleIntensityTypeChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
@@ -66,7 +76,6 @@ export const Intensity = ({
     notifyParent();
   };
 
-  // Input Change
   const handleInputChange = (
     index: number,
     key: "value" | "duration" | "technique",
@@ -78,7 +87,6 @@ export const Intensity = ({
     notifyParent();
   };
 
-  // Add and Remove Intensity
   const addIntensity = () => {
     setIntensities([
       ...intensities,
@@ -95,161 +103,159 @@ export const Intensity = ({
   };
 
   return (
-    <div className="intensity-container">
-      <h4 className="intensity-header">Intensity</h4>
+    <IntensityContainer>
+      <IntensityHeader>Intenzitet</IntensityHeader>
 
       {/* Segment Type */}
-      <label className="input-label">
-        Segment Type:
-        <select
-          value={segmentType}
-          onChange={handleSegmentTypeChange}
-          className="input-select"
-        >
-          <option value="vreme">Time</option>
-          <option value="distance">Distance</option>
-        </select>
-      </label>
+      <InputLabel>
+        Tip Segmenta:
+        <SelectField value={segmentType} onChange={handleSegmentTypeChange}>
+          <option value="vreme">Vreme</option>
+          <option value="distance">Razdaljina</option>
+        </SelectField>
+      </InputLabel>
 
       {/* Unit */}
-      <label className="input-label">
-        Unit:
-        <select
-          value={unit}
-          onChange={handleUnitChange}
-          className="input-select"
-        >
+      <InputLabel>
+        Jedinica:
+        <SelectField value={unit} onChange={handleUnitChange}>
           {segmentType === "vreme" ? (
             <>
-              <option value="s">Seconds</option>
-              <option value="min">Minutes</option>
+              <option value="s">Sekunde</option>
+              <option value="min">Minuti</option>
             </>
           ) : (
             <>
-              <option value="m">Meters</option>
-              <option value="km">Kilometers</option>
+              <option value="m">Metri</option>
+              <option value="km">Kilometri</option>
             </>
           )}
-        </select>
-      </label>
+        </SelectField>
+      </InputLabel>
 
       {/* Intensity Type */}
-      <label className="input-label">
-        Intensity Type:
-        <select
-          value={intensityType}
-          onChange={handleIntensityTypeChange}
-          className="input-select"
-        >
+      <InputLabel>
+        Tip Intenziteta:
+        <SelectField value={intensityType} onChange={handleIntensityTypeChange}>
           {intensityTypeOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
-        </select>
-      </label>
+        </SelectField>
+      </InputLabel>
 
       {/* Intensity Inputs */}
       {intensities.map((intensity, index) => (
-        <div key={index} className="intensity-item">
+        <IntensityItem key={index}>
           {intensityType === "single" && (
-            <label className="input-label">
-              Value:
-              <input
+            <InputLabel>
+              Vrednost:
+              <InputField
                 type="number"
                 value={intensity.value}
                 onChange={(e) => handleInputChange(index, "value", e)}
-                placeholder="Value"
+                placeholder="Vrednost"
               />
-            </label>
+            </InputLabel>
           )}
           {intensityType === "multiple" && (
-            <label className="input-label">
-              Segment Intensity:
-              <input
+            <InputLabel>
+              Segment Intenziteta:
+              <InputField
                 type="number"
                 value={intensity.value}
                 onChange={(e) => handleInputChange(index, "value", e)}
-                placeholder="Segment Intensity"
+                placeholder="Segment Intenziteta"
               />
-            </label>
+            </InputLabel>
           )}
           {intensityType === "time-intensity" && (
             <>
-              <label className="input-label">
-                Value:
-                <input
+              <InputLabel>
+                Vrednost:
+                <InputField
                   type="number"
                   value={intensity.value}
                   onChange={(e) => handleInputChange(index, "value", e)}
-                  placeholder="Value"
+                  placeholder="Vrednost"
                 />
-              </label>
-              <label className="input-label">
-                Duration:
-                <input
+              </InputLabel>
+              <InputLabel style={{ marginLeft: "20px" }}>
+                Trajanje:
+                <InputField
                   type="number"
                   value={intensity.duration}
                   onChange={(e) => handleInputChange(index, "duration", e)}
-                  placeholder="Duration"
+                  placeholder="Trajanje"
                 />
-              </label>
+              </InputLabel>
             </>
           )}
           {intensityType === "technique-time-intensity" && (
             <>
-              <label className="input-label">
-                Technique:
-                <input
+              <InputLabel>
+                Tehnika:
+                <InputField
                   type="text"
                   value={intensity.technique}
                   onChange={(e) => handleInputChange(index, "technique", e)}
-                  placeholder="Technique"
+                  placeholder="Tehnika"
                 />
-              </label>
-              <label className="input-label">
-                Value:
-                <input
+              </InputLabel>
+              <InputLabel style={{ marginLeft: "20px" }}>
+                Vrednost:
+                <InputField
                   type="number"
                   value={intensity.value}
                   onChange={(e) => handleInputChange(index, "value", e)}
-                  placeholder="Value"
+                  placeholder="Vrednost"
                 />
-              </label>
-              <label className="input-label">
-                Duration:
-                <input
+              </InputLabel>
+              <InputLabel style={{ marginLeft: "20px" }}>
+                Trajanje:
+                <InputField
                   type="number"
                   value={intensity.duration}
                   onChange={(e) => handleInputChange(index, "duration", e)}
-                  placeholder="Duration"
+                  placeholder="Trajanje"
                 />
-              </label>
+              </InputLabel>
             </>
           )}
           {intensities.length > 1 && (
-            <button onClick={() => removeIntensity(index)}>
-              <MdDelete style={{ height: "20px", width: "20px" }} />
-            </button>
+            <Button
+              style={{
+                marginTop: "1.5rem",
+                marginLeft: "1rem",
+                height: "3rem",
+                width: "3rem",
+                fontSize: "1.5rem",
+              }}
+              onClick={() => removeIntensity(index)}
+            >
+              <MdDelete />
+            </Button>
           )}
-        </div>
+        </IntensityItem>
       ))}
 
+      {/* Add Intensity Button */}
       {piramida && (
-        <button onClick={addIntensity}>
-          <MdAdd /> Add Intensity
-        </button>
+        <AddButton onClick={addIntensity}>
+          <MdAdd /> Dodaj Intenzitet
+        </AddButton>
       )}
 
-      {/* Piramida Toggle */}
-      <label className="input-label">
+      {/* Pyramid Toggle */}
+      <CheckboxWrapper>
         <input
           type="checkbox"
           checked={piramida}
           onChange={(e) => setPiramida(e.target.checked)}
         />
-        Enable Pyramid
-      </label>
-    </div>
+        <label>Omogući Piramidu</label>
+      </CheckboxWrapper>
+    </IntensityContainer>
   );
 };

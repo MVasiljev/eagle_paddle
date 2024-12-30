@@ -1,20 +1,34 @@
+/** @jsxImportSource @emotion/react */
 import React, { useState } from "react";
 import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash } from "react-icons/fa";
 import * as yup from "yup";
+import {
+  FormWrapper,
+  Heading,
+  SubHeading,
+  Form,
+  InputGroup,
+  Icon,
+  Input,
+  EyeIcon,
+  ErrorMessage,
+  Button,
+  ToggleButton,
+} from "./loginForm.style"; // Reuse styles from login
 
 // Yup schema for validation
 const registerSchema = yup.object().shape({
-  firstName: yup.string().required("First name is required"),
-  lastName: yup.string().required("Last name is required"),
-  email: yup.string().email("Invalid email").required("Email is required"),
+  firstName: yup.string().required("Ime je obavezno"),
+  lastName: yup.string().required("Prezime je obavezno"),
+  email: yup.string().email("Pogrešan email").required("Email je obavezan"),
   password: yup
     .string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
+    .min(6, "Lozinka mora imati najmanje 6 karaktera")
+    .required("Lozinka je obavezna"),
   confirmPassword: yup
     .string()
-    .oneOf([yup.ref("password")], "Passwords must match")
-    .required("Confirm password is required"),
+    .oneOf([yup.ref("password")], "Lozinke moraju biti iste")
+    .required("Potvrda lozinke je obavezna"),
 });
 
 interface RegisterFormProps {
@@ -24,9 +38,13 @@ interface RegisterFormProps {
     email: string;
     password: string;
   }) => void;
+  onToggleLogin?: () => void; // Optional callback for toggling to login
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({
+  onSubmit,
+  onToggleLogin,
+}) => {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -34,7 +52,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit }) => {
     password: "",
     confirmPassword: "",
   });
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
@@ -51,6 +69,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit }) => {
       setErrors({});
 
       // Remove confirmPassword before sending to the backend
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...dataToSubmit } = form;
       onSubmit(dataToSubmit); // Only send relevant data
     } catch (validationErrors) {
@@ -63,97 +82,109 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* First Name */}
-      <div className="input-group">
-        <FaUser className="icon" />
-        <input
-          type="text"
-          name="firstName"
-          placeholder="First Name"
-          onChange={handleChange}
-          value={form.firstName}
-          className="input"
-        />
-        {errors.firstName && <p className="error">{errors.firstName}</p>}
-      </div>
+    <FormWrapper>
+      <Heading>Registracija</Heading>
+      <SubHeading>Napravite novi nalog da biste počeli.</SubHeading>
+      <Form onSubmit={handleSubmit}>
+        {/* First Name */}
+        <InputGroup>
+          <Icon>
+            <FaUser />
+          </Icon>
+          <Input
+            type="text"
+            name="firstName"
+            placeholder="Ime"
+            onChange={handleChange}
+            value={form.firstName}
+          />
+        </InputGroup>
+        {errors.firstName && <ErrorMessage>{errors.firstName}</ErrorMessage>}
 
-      {/* Last Name */}
-      <div className="input-group">
-        <FaUser className="icon" />
-        <input
-          type="text"
-          name="lastName"
-          placeholder="Last Name"
-          onChange={handleChange}
-          value={form.lastName}
-          className="input"
-        />
-        {errors.lastName && <p className="error">{errors.lastName}</p>}
-      </div>
+        {/* Last Name */}
+        <InputGroup>
+          <Icon>
+            <FaUser />
+          </Icon>
+          <Input
+            type="text"
+            name="lastName"
+            placeholder="Prezime"
+            onChange={handleChange}
+            value={form.lastName}
+          />
+        </InputGroup>
+        {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
 
-      {/* Email */}
-      <div className="input-group">
-        <FaEnvelope className="icon" />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          value={form.email}
-          className="input"
-        />
-        {errors.email && <p className="error">{errors.email}</p>}
-      </div>
+        {/* Email */}
+        <InputGroup>
+          <Icon>
+            <FaEnvelope />
+          </Icon>
+          <Input
+            type="email"
+            name="email"
+            placeholder="Email"
+            onChange={handleChange}
+            value={form.email}
+          />
+        </InputGroup>
+        {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
 
-      {/* Password */}
-      <div className="input-group">
-        <FaLock className="icon" />
-        <input
-          type={passwordVisible ? "text" : "password"}
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-          value={form.password}
-          className="input"
-        />
-        <div
-          className="eye-icon"
-          onClick={() => setPasswordVisible(!passwordVisible)}
-          style={{ cursor: "pointer" }}
-        >
-          {passwordVisible ? <FaEyeSlash /> : <FaEye />}
-        </div>
-        {errors.password && <p className="error">{errors.password}</p>}
-      </div>
+        {/* Password */}
+        <InputGroup>
+          <Icon>
+            <FaLock />
+          </Icon>
+          <Input
+            type={passwordVisible ? "text" : "password"}
+            name="password"
+            placeholder="Lozinka"
+            onChange={handleChange}
+            value={form.password}
+          />
+          <EyeIcon onClick={() => setPasswordVisible(!passwordVisible)}>
+            {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+          </EyeIcon>
+        </InputGroup>
+        {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
 
-      {/* Confirm Password */}
-      <div className="input-group">
-        <FaLock className="icon" />
-        <input
-          type={confirmPasswordVisible ? "text" : "password"}
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          onChange={handleChange}
-          value={form.confirmPassword}
-          className="input"
-        />
-        <div
-          className="eye-icon"
-          onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-          style={{ cursor: "pointer" }}
-        >
-          {confirmPasswordVisible ? <FaEyeSlash /> : <FaEye />}
-        </div>
+        {/* Confirm Password */}
+        <InputGroup>
+          <Icon>
+            <FaLock />
+          </Icon>
+          <Input
+            type={confirmPasswordVisible ? "text" : "password"}
+            name="confirmPassword"
+            placeholder="Potvrda lozinke"
+            onChange={handleChange}
+            value={form.confirmPassword}
+          />
+          <EyeIcon
+            onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+          >
+            {confirmPasswordVisible ? <FaEyeSlash /> : <FaEye />}
+          </EyeIcon>
+        </InputGroup>
         {errors.confirmPassword && (
-          <p className="error">{errors.confirmPassword}</p>
+          <ErrorMessage>{errors.confirmPassword}</ErrorMessage>
         )}
-      </div>
 
-      <button type="submit" className="btn">
-        Register
-      </button>
-    </form>
+        <Button type="submit">Registrujte se</Button>
+      </Form>
+
+      {/* Toggle to Login */}
+      <ToggleButton
+        onClick={(e) => {
+          e.preventDefault();
+          if (onToggleLogin) onToggleLogin();
+        }}
+        href="#"
+      >
+        Već imate nalog? Prijavite se
+      </ToggleButton>
+    </FormWrapper>
   );
 };
 
