@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
-import User from "../models/user.model";
+import User, { IUser } from "../models/user.model";
 import logger from "../../config/logger";
 import Role from "../models/role.model";
 
@@ -169,7 +169,18 @@ export const updateUser = async (
 ): Promise<void> => {
   try {
     const userId = req.params.id;
-    const { firstName, lastName } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      avatar,
+      birth,
+      club,
+      boat,
+      gender,
+      height,
+      weight,
+    } = req.body;
 
     // Extract and verify token
     const token = req.headers.authorization?.split(" ")[1];
@@ -185,29 +196,6 @@ export const updateUser = async (
     const requesterId = decoded.userId;
     const requesterRole = decoded.role;
 
-    // Ensure only admins can update role
-    if (req.body.role) {
-      if (requesterRole !== "admin") {
-        res
-          .status(403)
-          .json({ error: "Only admins can update the role field." });
-        return;
-      }
-      // Handle role update if admin
-      const roleUpdate = { role: req.body.role };
-      const updatedUser = await User.findByIdAndUpdate(userId, roleUpdate, {
-        new: true,
-      }).select("-password");
-
-      if (!updatedUser) {
-        res.status(404).json({ error: "User not found." });
-        return;
-      }
-
-      res.status(200).json(updatedUser);
-      return;
-    }
-
     // Prevent users from updating other profiles unless they are admins
     if (requesterRole !== "admin" && requesterId !== userId) {
       res
@@ -216,10 +204,29 @@ export const updateUser = async (
       return;
     }
 
-    // Update allowed fields
-    const updates: Record<string, any> = {};
-    if (firstName) updates.firstName = firstName;
-    if (lastName) updates.lastName = lastName;
+    // Prevent regular users from updating sensitive fields
+    if (req.body.role || req.body.approved || req.body._id) {
+      if (requesterRole !== "admin") {
+        res.status(403).json({
+          error: "Only admins can update role, approval, or ID fields.",
+        });
+        return;
+      }
+    }
+
+    // Construct allowed updates dynamically
+    const updates: Partial<IUser> = {};
+
+    if (firstName !== undefined) updates.firstName = firstName;
+    if (lastName !== undefined) updates.lastName = lastName;
+    if (email !== undefined) updates.email = email;
+    if (avatar !== undefined) updates.avatar = avatar;
+    if (birth !== undefined) updates.birth = birth;
+    if (club !== undefined) updates.club = club;
+    if (boat !== undefined) updates.boat = boat;
+    if (gender !== undefined) updates.gender = gender;
+    if (height !== undefined) updates.height = height;
+    if (weight !== undefined) updates.weight = weight;
 
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
       new: true,
@@ -232,7 +239,7 @@ export const updateUser = async (
 
     res.status(200).json(updatedUser);
   } catch (error) {
-    logger.error("Error updating user profile: %o", error);
+    console.error("Error updating user profile:", error);
     res.status(500).json({ error: "Failed to update user profile." });
   }
 };

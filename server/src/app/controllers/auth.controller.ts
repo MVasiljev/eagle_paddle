@@ -21,7 +21,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "defaultSecret";
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { firstName, lastName, email, password, role: roleName } = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
     // Check if the user already exists
     const existingUser = await User.findOne({ email });
@@ -34,14 +34,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Assign role if provided (optional during registration)
-    let role = null;
-    if (roleName) {
-      role = await Role.findOne({ name: roleName });
-      if (!role) {
-        res.status(400).json({ error: `Invalid role: ${roleName}` });
-        return;
-      }
-    }
+    // let role = null;
+    // if (roleName) {
+    //   role = await Role.findOne({ name: roleName });
+    //   if (!role) {
+    //     res.status(400).json({ error: `Invalid role: ${roleName}` });
+    //     return;
+    //   }
+    // }
 
     // Create the user
     await User.create({
@@ -49,7 +49,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       lastName,
       email,
       password: hashedPassword,
-      role: role ? role._id : null, // Role is optional
+      role: null, // Role is optional
       approved: false, // Admin must approve
     });
 

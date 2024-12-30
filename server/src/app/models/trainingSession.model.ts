@@ -15,6 +15,7 @@ export interface ITrainingSession extends Document {
     timeInZones?: number[]; // Five zones
     HRavg?: number;
     HRmax?: number;
+    comments?: string;
   };
 }
 
@@ -27,12 +28,12 @@ const trainingSessionSchema: Schema = new Schema(
     },
     athlete: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference to the User model for athletes
+      ref: "User",
       required: true,
     },
     coach: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference to the User model for coaches
+      ref: "User",
       required: true,
     },
     date: { type: Date, required: true },
@@ -43,13 +44,14 @@ const trainingSessionSchema: Schema = new Schema(
       default: "upcoming",
     },
     results: {
-      HRrest: { type: Number },
-      duration: { type: Number },
-      distance: { type: Number },
-      RPE: { type: Number },
-      timeInZones: [Number],
-      HRavg: { type: Number },
-      HRmax: { type: Number },
+      HRrest: { type: Number }, // Puls u mirovanju
+      duration: { type: Number }, // Trajanje (minuti)
+      distance: { type: Number }, // Razdaljina (km)
+      RPE: { type: Number, min: 1, max: 10 }, // RPE (1-10)
+      timeInZones: { type: [Number] }, // Time in heart rate zones
+      HRavg: { type: Number }, // Average heart rate
+      HRmax: { type: Number }, // Maksimalni puls
+      comments: { type: String }, // User comments
     },
   },
   { timestamps: true }

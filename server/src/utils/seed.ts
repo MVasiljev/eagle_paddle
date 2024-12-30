@@ -3,6 +3,7 @@ import Role from "../app/models/role.model";
 import User from "../app/models/user.model";
 import TrainingSession from "../app/models/trainingSession.model"; // Import your TrainingSession model
 import logger from "../config/logger";
+import TrainingType from "../app/models/trainingType.model";
 
 export const initializeDatabase = async () => {
   try {
@@ -16,6 +17,7 @@ export const initializeDatabase = async () => {
       // Delete all existing data
       await Role.deleteMany({});
       await User.deleteMany({});
+      await TrainingType.deleteMany({}); // Delete all training types
       await TrainingSession.deleteMany({}); // Delete all training sessions
       logger.info(
         "All existing roles, users, and training sessions have been deleted."

@@ -20,9 +20,6 @@ export const registerSchema: ObjectSchema = Joi.object({
     "string.min": "Password must be at least 6 characters.",
     "string.empty": "Password is required.",
   }),
-  role: Joi.string().optional().messages({
-    "string.base": "Role must be a string.",
-  }),
 });
 
 // Login schema

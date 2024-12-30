@@ -336,6 +336,42 @@ export const updateTrainingSessionResults = async (
   try {
     const { id } = req.params;
     const { results } = req.body;
+    logger.info(`Updating results for session: ${id}`);
+    logger.debug(`Results data: ${JSON.stringify(results)}`);
+    // Validate results data
+    const requiredFields = [
+      "HRrest",
+      "duration",
+      "distance",
+      "RPE",
+      "HRavg",
+      "HRmax",
+      "timeInZones",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => results[field] === undefined || results[field] === null
+    );
+
+    if (missingFields.length > 0) {
+      logger.warn(
+        `Missing fields in results for session ${id}: ${missingFields.join(", ")}`
+      );
+      res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+      return;
+    }
+
+    if (
+      !Array.isArray(results.timeInZones) ||
+      results.timeInZones.length !== 5
+    ) {
+      logger.warn(`Invalid or incomplete timeInZones for session ${id}`);
+      res.status(400).json({
+        message: "Invalid timeInZones. Must be an array of 5 numbers.",
+      });
+      return;
+    }
 
     const session = await TrainingSession.findById(id);
 
@@ -344,10 +380,16 @@ export const updateTrainingSessionResults = async (
       return;
     }
 
+    // Log current session state
+    logger.info(`Updating results for session: ${id}`);
+    logger.debug(`Current session data: ${JSON.stringify(session.results)}`);
+    logger.debug(`New results: ${JSON.stringify(results)}`);
+
     session.results = results;
     session.status = "completed";
     await session.save();
 
+    logger.info(`Successfully updated session ${id} with new results.`);
     res.status(200).json(session);
   } catch (error: unknown) {
     if (error instanceof Error) {
