@@ -52,7 +52,8 @@ const TrainingEvent: React.FC<TrainingEventProps> = ({
   };
 
   const handleEditTraining = () => {
-    dispatch(setView(Views.TRAINING_EDIT)); // Switch to edit view
+    // dispatch(setView(Views.TRAINING_EDIT)); // Switch to edit view
+    console.log("Edit training");
   };
 
   return (

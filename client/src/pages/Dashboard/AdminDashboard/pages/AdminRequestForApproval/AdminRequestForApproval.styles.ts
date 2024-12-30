@@ -6,7 +6,8 @@ export const DashboardContainer = styled.div`
   border-radius: ${({ theme }) => theme.radius.default};
   box-shadow: ${({ theme }) => theme.shadows.card};
   margin: auto;
-  max-width: 1000px;
+  max-width: 800px;
+  width: 100%;
 `;
 
 export const Table = styled.table`

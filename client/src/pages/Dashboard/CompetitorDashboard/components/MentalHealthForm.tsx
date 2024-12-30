@@ -87,7 +87,7 @@ const MentalHealthForm = () => {
 
   return (
     <FormWrapper>
-      <Heading>{edit ? "Ažuriraj Unos" : "Zdravo Ana"}</Heading>
+      <Heading>{edit ? "Ažuriraj Unos" : "Zdravo"}</Heading>
       <Form onSubmit={handleMentalHealthSubmit}>
         <ZoneGroup>
           <div>

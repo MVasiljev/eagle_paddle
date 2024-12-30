@@ -4,6 +4,7 @@ export const Container = styled.div`
   background-color: #121212; /* Match Calendar background */
   border-radius: 8px; /* Same border radius */
   max-width: 900px; /* Match Calendar max-width */
+  width: 100%; /* Full width */
   padding: ${({ theme }) => theme.spacing.large}; /* Add consistent padding */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Match Calendar shadow */
   color: ${({ theme }) => theme.colors.white}; /* White text for consistency */

@@ -123,9 +123,6 @@ const AdminDashboard: React.FC = () => {
           Kreiraj trening
         </SidebarLink>
 
-        <SidebarLink onClick={() => dispatch(setView(Views.PLAN))}>
-          Moj tim
-        </SidebarLink>
         <SidebarLink
           onClick={() => dispatch(setView(Views.TYPE_CATEGORY_CREATE))}
         >

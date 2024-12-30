@@ -33,9 +33,7 @@ const Header: React.FC = () => {
             <NavLink onClick={() => dispatch(setView(Views.CALENDAR))}>
               Početna
             </NavLink>
-            <NavLink onClick={() => dispatch(setView(Views.PLAN))}>
-              Treninzi
-            </NavLink>
+
             <NavLink onClick={() => dispatch(setView(Views.COMPETITORS))}>
               Takmičari
             </NavLink>
@@ -45,25 +43,28 @@ const Header: React.FC = () => {
             <NavLink onClick={() => dispatch(setView(Views.REQUESTS))}>
               Zahtevi za odobrenje
             </NavLink>
-            <NavLink
+            {/* <NavLink
               onClick={() => dispatch(setView(Views.MENTAL_HEALTH_HISTORY))}
             >
               Mentalno zdravlje
             </NavLink>
             <NavLink onClick={() => dispatch(setView(Views.REQUESTS))}>
               Statistika
-            </NavLink>
+            </NavLink> */}
           </>
         );
       case "coach":
         return (
           <>
-            <NavLink onClick={() => dispatch(setView(Views.HOME))}>
+            <NavLink onClick={() => dispatch(setView(Views.CALENDAR))}>
               Početna
             </NavLink>
 
             <NavLink onClick={() => dispatch(setView(Views.PLAN))}>
-              Treninzi
+              Kreiraj trening
+            </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.ASSIGN))}>
+              Dodeli trening
             </NavLink>
             <NavLink onClick={() => dispatch(setView(Views.COMPETITORS))}>
               Takmičari

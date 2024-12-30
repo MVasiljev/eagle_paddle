@@ -1,210 +1,157 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
-// import "./AdminDashboard.css";
 import SearchBar from "../../../components/SearchBar/SearchBar";
 import Calendar from "../../../components/Calendar/Calendar";
-import { DateClickArg } from "@fullcalendar/interaction/index.js";
+import { DateClickArg } from "@fullcalendar/interaction";
 import { EventClickArg, EventInput } from "@fullcalendar/core";
 import { useTrainingSessions } from "../../../hooks/useTrainingSession";
-import { useUsers } from "../../../hooks/useUsers"; // Custom hook to fetch competitors
+import AssignCompetitorsToTraining from "../shared/TrainingPlanPage/AssignCompetitorsToTraining";
 
-Modal.setAppElement("#root"); // Required for accessibility
+// Import styles
+import {
+  DashboardContainer,
+  MainContent,
+  CalendarWrapper,
+} from "./CoachDashboard.styles";
+import { SearchBarWrapper } from "../AdminDashboard/AdminDashboard.styles";
+import { Views } from "../../../constants/views";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../../../redux/store";
+import CompetitorsPage from "../shared/CompetitorsPage/CompetitorsPage";
+import CompetitorProfile from "../shared/CompetitorProfilePage/CompetitorProfile";
+import TrainingPlan from "../shared/TrainingPlanPage/TrainingPlan";
+import { setView } from "../../../redux/slices/viewSlice";
+import TrainingEvent from "../shared/TrainingEvent/TrainingEvent";
+
+Modal.setAppElement("#root");
 
 const CoachDashboard: React.FC = () => {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const view = useSelector((state: RootState) => state.dashboard.view);
   const { sessions, status } = useTrainingSessions();
-  const { users: competitors } = useUsers(); // Assuming a hook to fetch competitors
 
   const [events, setEvents] = useState<EventInput[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedSession, setSelectedSession] = useState<{
+    sessions: Array<any>;
+  } | null>(null);
 
-  // Transform sessions into FullCalendar-compatible events
+  // Aggregate sessions by date and plan name
   useEffect(() => {
     if (sessions && sessions.length > 0) {
-      const formattedEvents = sessions.map((session) => ({
-        id: session._id,
-        title: session.plan?.name || "Unnamed Plan", // Use plan name or fallback
-        start: session.date,
-        status: session.status || "unknown", // Use the status from backend
-        extendedProps: {
-          results: session.results || {}, // Pass results if needed
-          status: session.status || "unknown", // Use backend status
-        },
-      }));
-      setEvents(formattedEvents);
+      const aggregatedEvents: { [key: string]: EventInput } = {};
+
+      sessions.forEach((session) => {
+        const planName = session.plan?.name ?? "Unnamed Plan";
+        const date = session.date
+          ? new Date(session.date).toISOString().split("T")[0]
+          : "Unknown Date";
+        const key = `${planName}-${date}`;
+
+        if (aggregatedEvents[key]) {
+          aggregatedEvents[key].title = `${planName} (${
+            (aggregatedEvents[key].extendedProps?.count ?? 0) + 1
+          })`;
+          aggregatedEvents[key].extendedProps.count += 1;
+          aggregatedEvents[key].extendedProps.sessions.push(session);
+        } else {
+          aggregatedEvents[key] = {
+            id: key,
+            title: `${planName} (1)`,
+            start: session.date || new Date().toISOString(),
+            extendedProps: {
+              count: 1,
+              sessions: [session],
+            },
+          };
+        }
+      });
+
+      setEvents(Object.values(aggregatedEvents));
     }
   }, [sessions]);
 
   const handleEventClick = (eventData: EventClickArg) => {
-    const { extendedProps } = eventData.event;
-    console.log("Event clicked:", {
-      status: extendedProps.status, // Correctly reflects the backend status
-      results: extendedProps.results, // Additional debugging info
-    });
+    const eventProps = eventData.event.extendedProps;
+
+    setSelectedSession({ sessions: eventProps.sessions });
+
+    // Switch views based on the number of sessions
+    if (eventProps.sessions.length === 1) {
+      dispatch(setView(Views.TRAINING_EDIT)); // Single session view
+    } else {
+      dispatch(setView(Views.TRAINING_RESULTS)); // Aggregated view for multiple sessions
+    }
+
+    console.log("Event clicked:", eventProps);
   };
 
   const handleDateClick = (dateData: DateClickArg) => {
     console.log("Date clicked:", dateData);
   };
 
-  const handleAssignButtonClick = () => {
-    navigate("/dashboard/coach/assign-training");
-  };
-
-  const handleCreateTeam = () => {
-    console.log("Creating team with users:", selectedUsers);
-    setIsModalOpen(false);
-
-    // Implement team creation API call here
-    // Example:
-    // createTeam({ name: "New Team", coach: loggedInCoachId, members: selectedUsers });
-  };
-
-  const handleUserSelection = (userId: string) => {
-    setSelectedUsers(
-      (prev) =>
-        prev.includes(userId)
-          ? prev.filter((id) => id !== userId) // Remove user if already selected
-          : [...prev, userId] // Add user if not selected
-    );
-  };
-
   return (
-    <div className="dashboard-container">
-      {/* Search Bar */}
-      <SearchBar onSearch={(query) => console.log(query)} />
-
-      {/* Calendar */}
-      {status === "loading" ? (
-        <p>Loading sessions...</p>
-      ) : (
-        <Calendar
-          onEventClick={handleEventClick}
-          onDateClick={handleDateClick}
-          events={events}
-        />
-      )}
-
-      {/* Assign Training Button */}
-      <div style={{ marginTop: "20px", textAlign: "center" }}>
-        <button
-          onClick={handleAssignButtonClick}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "16px",
-            marginRight: "10px",
-          }}
-        >
-          Assign Training Plans
-        </button>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "16px",
-          }}
-        >
-          Create Team
-        </button>
-      </div>
-
-      {/* Welcome Text */}
-      <p style={{ marginTop: "20px", textAlign: "center" }}>
-        Welcome, Coach! This is your dashboard.
-      </p>
-
-      {/* Modal for Selecting Users */}
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={() => setIsModalOpen(false)}
-        contentLabel="Create Team"
-        style={{
-          content: {
-            top: "50%",
-            left: "50%",
-            right: "auto",
-            bottom: "auto",
-            marginRight: "-50%",
-            transform: "translate(-50%, -50%)",
-            width: "400px",
-            borderRadius: "10px",
-            zIndex: 1050, // Higher than the calendar's z-index
-          },
-          overlay: {
-            zIndex: 1040, // Ensure overlay is behind modal content
-            backgroundColor: "rgba(0, 0, 0, 0.75)", // Dim background
-          },
-        }}
-      >
-        <h2 style={{ textAlign: "center" }}>Create Team</h2>
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            maxHeight: "300px",
-            overflowY: "auto",
-          }}
-        >
-          {competitors.map((user) => (
-            <li key={user._id} style={{ margin: "10px 0" }}>
-              <label style={{ display: "flex", alignItems: "center" }}>
-                <input
-                  type="checkbox"
-                  checked={selectedUsers.includes(user._id)}
-                  onChange={() => handleUserSelection(user._id)}
-                  style={{ marginRight: "10px" }}
+    <DashboardContainer>
+      <MainContent style={{ marginTop: "6rem" }}>
+        {view === Views.CALENDAR ? (
+          status === "loading" ? (
+            <p>Loading sessions...</p>
+          ) : (
+            <>
+              <SearchBarWrapper>
+                <SearchBar onSearch={(query) => console.log(query)} />
+              </SearchBarWrapper>
+              <CalendarWrapper>
+                <Calendar
+                  onEventClick={handleEventClick}
+                  onDateClick={handleDateClick}
+                  events={events}
                 />
-                {user.firstName} {user.lastName}
-              </label>
-            </li>
-          ))}
-        </ul>
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <button
-            onClick={handleCreateTeam}
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontSize: "16px",
-            }}
-          >
-            Confirm
-          </button>
-          <button
-            onClick={() => setIsModalOpen(false)}
-            style={{
-              padding: "10px 20px",
-              backgroundColor: "#dc3545",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              fontSize: "16px",
-              marginLeft: "10px",
-              zIndex: 1050,
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      </Modal>
-    </div>
+              </CalendarWrapper>
+            </>
+          )
+        ) : view === Views.ASSIGN ? (
+          <AssignCompetitorsToTraining role="coach" />
+        ) : view === Views.COMPETITORS ? (
+          <CompetitorsPage />
+        ) : view === Views.PROFILE ? (
+          <CompetitorProfile />
+        ) : view === Views.PLAN ? (
+          <TrainingPlan />
+        ) : view === Views.TRAINING_RESULTS && selectedSession ? (
+          <TrainingEvent
+            competitors={selectedSession.sessions.map(
+              (s: {
+                athlete?: {
+                  _id: string;
+                  firstName: string;
+                  lastName: string;
+                  avatar: string;
+                };
+                coach?: {
+                  _id: string;
+                  firstName: string;
+                  lastName: string;
+                  avatar: string;
+                };
+                status: string;
+                plan?: { name: string };
+                date?: string;
+              }) => ({
+                _id: s.athlete?._id || s.coach?._id || "unknown",
+                firstName:
+                  s.athlete?.firstName || s.coach?.firstName || "Nepoznat",
+                lastName: s.athlete?.lastName || s.coach?.lastName || "",
+                avatar: s.athlete?.avatar || s.coach?.avatar || "",
+                completed: s.status === "completed",
+              })
+            )}
+            title={selectedSession.sessions[0]?.plan?.name || "Trening"}
+            date={selectedSession.sessions[0]?.date || new Date().toISOString()}
+            session={selectedSession.sessions[0]}
+          />
+        ) : null}
+      </MainContent>
+    </DashboardContainer>
   );
 };
 
