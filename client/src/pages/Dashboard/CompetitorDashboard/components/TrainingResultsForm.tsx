@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { FaClock, FaHeartbeat, FaRunning, FaChartLine } from "react-icons/fa";
+import {
+  FaClock,
+  FaHeartbeat,
+  FaRunning,
+  FaChartLine,
+  FaEye,
+} from "react-icons/fa";
 import {
   FormWrapper,
   Heading,
@@ -15,16 +21,22 @@ import {
   ZoneLabel,
   DescriptionText, // Za opise
 } from "./TrainingResultsForm.styles";
-import { TrainingResultsFormData } from "../../../../types/types";
+import {
+  TrainingResultsFormData,
+  TrainingSession,
+} from "../../../../types/types";
+import TrainingModal from "../../../../components/TrainingModal/TrainingModal";
 
 interface TrainingResultsFormProps {
   onSubmit: (data: TrainingResultsFormData) => void;
   onBack: () => void;
+  session: TrainingSession | null; // Add session prop
 }
 
 const TrainingResultsForm: React.FC<TrainingResultsFormProps> = ({
   onSubmit,
   onBack,
+  session,
 }) => {
   const [results, setResults] = useState<TrainingResultsFormData>({
     HRodmor: 0, // Initialize with numbers
@@ -41,6 +53,8 @@ const TrainingResultsForm: React.FC<TrainingResultsFormProps> = ({
     zona4: 0,
     zona5: 0,
   });
+
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
 
   const [errors, setErrors] = useState<
     Partial<Record<keyof TrainingResultsFormData, string>>
@@ -144,202 +158,228 @@ const TrainingResultsForm: React.FC<TrainingResultsFormProps> = ({
       }));
     };
 
+  const handleViewSession = () => {
+    setIsModalOpen(true);
+  };
+
   return (
-    <FormWrapper>
-      <Heading>Rezultati Treninga</Heading>
-      <Form onSubmit={handleSubmit}>
-        {/* HRodmor (Puls u mirovanju) */}
-        <InputGroup>
-          <Icon>
-            <FaHeartbeat />
-          </Icon>
-          <Input
-            type="number"
-            placeholder="Puls u mirovanju (bpm)"
-            value={results.HRodmor}
-            onChange={handleInputChange("HRodmor")}
-          />
-        </InputGroup>
-        {errors.HRodmor && <ErrorMessage>{errors.HRodmor}</ErrorMessage>}
-        <DescriptionText>
-          Puls u mirovanju, izmerite ga dok ste u mirovanju.
-        </DescriptionText>
+    <>
+      {" "}
+      <FormWrapper>
+        <Heading>
+          Rezultati Treninga
+          {session && (
+            <FaEye
+              style={{ marginLeft: "1rem", cursor: "pointer" }}
+              onClick={handleViewSession}
+              title="Pogledaj trening"
+            />
+          )}
+        </Heading>{" "}
+        <Form onSubmit={handleSubmit}>
+          {/* HRodmor (Puls u mirovanju) */}
+          <InputGroup>
+            <Icon>
+              <FaHeartbeat />
+            </Icon>
+            <Input
+              type="number"
+              placeholder="Puls u mirovanju (bpm)"
+              value={results.HRodmor}
+              onChange={handleInputChange("HRodmor")}
+            />
+          </InputGroup>
+          {errors.HRodmor && <ErrorMessage>{errors.HRodmor}</ErrorMessage>}
+          <DescriptionText>
+            Puls u mirovanju, izmerite ga dok ste u mirovanju.
+          </DescriptionText>
 
-        {/* Trajanje */}
-        <InputGroup>
-          <Icon>
-            <FaClock />
-          </Icon>
-          <Input
-            type="text"
-            placeholder="Trajanje (minuti)"
-            value={results.trajanje}
-            onChange={handleInputChange("trajanje")}
-          />
-        </InputGroup>
-        {errors.trajanje && <ErrorMessage>{errors.trajanje}</ErrorMessage>}
-        <DescriptionText>
-          Ukupno vreme trajanja treninga u minutima.
-        </DescriptionText>
+          {/* Trajanje */}
+          <InputGroup>
+            <Icon>
+              <FaClock />
+            </Icon>
+            <Input
+              type="text"
+              placeholder="Trajanje (minuti)"
+              value={results.trajanje}
+              onChange={handleInputChange("trajanje")}
+            />
+          </InputGroup>
+          {errors.trajanje && <ErrorMessage>{errors.trajanje}</ErrorMessage>}
+          <DescriptionText>
+            Ukupno vreme trajanja treninga u minutima.
+          </DescriptionText>
 
-        {/* Razdaljina */}
-        <InputGroup>
-          <Icon>
-            <FaRunning />
-          </Icon>
-          <Input
-            type="number"
-            placeholder="Razdaljina (km)"
-            value={results.razdaljina}
-            onChange={handleInputChange("razdaljina")}
-          />
-        </InputGroup>
-        {errors.razdaljina && <ErrorMessage>{errors.razdaljina}</ErrorMessage>}
-        <DescriptionText>
-          Pređena razdaljina tokom treninga u kilometrima.
-        </DescriptionText>
+          {/* Razdaljina */}
+          <InputGroup>
+            <Icon>
+              <FaRunning />
+            </Icon>
+            <Input
+              type="number"
+              placeholder="Razdaljina (km)"
+              value={results.razdaljina}
+              onChange={handleInputChange("razdaljina")}
+            />
+          </InputGroup>
+          {errors.razdaljina && (
+            <ErrorMessage>{errors.razdaljina}</ErrorMessage>
+          )}
+          <DescriptionText>
+            Pređena razdaljina tokom treninga u kilometrima.
+          </DescriptionText>
 
-        {/* RPE */}
-        <InputGroup>
-          <Icon>
-            <FaChartLine />
-          </Icon>
-          <Input
-            type="number"
-            placeholder="RPE (1-10)"
-            value={results.RPE}
-            onChange={handleInputChange("RPE")}
-            min="1"
-            max="10"
-          />
-        </InputGroup>
-        {errors.RPE && <ErrorMessage>{errors.RPE}</ErrorMessage>}
-        <DescriptionText>
-          RPE (Rating of Perceived Effort) između 1 i 10, kako ste se osećali
-          tokom treninga.
-        </DescriptionText>
+          {/* RPE */}
+          <InputGroup>
+            <Icon>
+              <FaChartLine />
+            </Icon>
+            <Input
+              type="number"
+              placeholder="RPE (1-10)"
+              value={results.RPE}
+              onChange={handleInputChange("RPE")}
+              min="1"
+              max="10"
+            />
+          </InputGroup>
+          {errors.RPE && <ErrorMessage>{errors.RPE}</ErrorMessage>}
+          <DescriptionText>
+            RPE (Rating of Perceived Effort) između 1 i 10, kako ste se osećali
+            tokom treninga.
+          </DescriptionText>
 
-        {/* HRprosek */}
-        <InputGroup>
-          <Icon>
-            <FaHeartbeat />
-          </Icon>
-          <Input
-            type="number"
-            placeholder="Prosečan puls (bpm)"
-            value={results.HRprosek}
-            onChange={handleInputChange("HRprosek")}
-          />
-        </InputGroup>
-        {errors.HRprosek && <ErrorMessage>{errors.HRprosek}</ErrorMessage>}
-        <DescriptionText>Prosečan puls tokom treninga.</DescriptionText>
+          {/* HRprosek */}
+          <InputGroup>
+            <Icon>
+              <FaHeartbeat />
+            </Icon>
+            <Input
+              type="number"
+              placeholder="Prosečan puls (bpm)"
+              value={results.HRprosek}
+              onChange={handleInputChange("HRprosek")}
+            />
+          </InputGroup>
+          {errors.HRprosek && <ErrorMessage>{errors.HRprosek}</ErrorMessage>}
+          <DescriptionText>Prosečan puls tokom treninga.</DescriptionText>
 
-        {/* HRmax */}
-        <InputGroup>
-          <Icon>
-            <FaHeartbeat />
-          </Icon>
-          <Input
-            type="number"
-            placeholder="Maksimalan puls (bpm)"
-            value={results.HRmax}
-            onChange={handleInputChange("HRmax")}
-          />
-        </InputGroup>
-        {errors.HRmax && <ErrorMessage>{errors.HRmax}</ErrorMessage>}
-        <DescriptionText>
-          Maksimalni puls koji ste postigli tokom treninga.
-        </DescriptionText>
+          {/* HRmax */}
+          <InputGroup>
+            <Icon>
+              <FaHeartbeat />
+            </Icon>
+            <Input
+              type="number"
+              placeholder="Maksimalan puls (bpm)"
+              value={results.HRmax}
+              onChange={handleInputChange("HRmax")}
+            />
+          </InputGroup>
+          {errors.HRmax && <ErrorMessage>{errors.HRmax}</ErrorMessage>}
+          <DescriptionText>
+            Maksimalni puls koji ste postigli tokom treninga.
+          </DescriptionText>
 
-        {/* Zona vremena */}
-        <Heading>Vreme po zonama (minuti)</Heading>
-        <DescriptionText>
-          Unesite vreme provedeno u svakoj od 5 zona intenziteta (minuti).
-        </DescriptionText>
-        <ZoneGroup>
-          {[1, 2, 3, 4, 5].map((zone, index) => (
-            <div key={zone}>
-              <ZoneLabel>Zona {zone}</ZoneLabel>
-              <Input
-                type="number"
-                placeholder="Minuti"
-                value={results.vremePoZonama[index]}
-                onChange={handleZoneTimeChange(index)}
-              />
-              <DescriptionText>
-                {zone === 1 && (
-                  <>
-                    <strong>Zona 1 (50-60% HRmax):</strong> <br />
-                    <em>Svha:</em> Laka aktivnost, oporavak. <br />
-                    <em>Opis:</em> Ovo je zona vrlo niskog intenziteta, koristi
-                    se za zagrevanje i hlađenje. Najčešće se koristi za oporavak
-                    i aerobnu kondiciju.
-                  </>
-                )}
-                {zone === 2 && (
-                  <>
-                    <strong>Zona 2 (60-70% HRmax):</strong> <br />
-                    <em>Svha:</em> Sagorevanje masti, izdržljivost. <br />
-                    <em>Opis:</em> Umereni intenzitet, gde telo sagoreva
-                    mešavinu masti i ugljenih hidrata. Tipično se koristi za
-                    duge, stabilne endurance treninge.
-                  </>
-                )}
-                {zone === 3 && (
-                  <>
-                    <strong>Zona 3 (70-80% HRmax):</strong> <br />
-                    <em>Svha:</em> Aerobna, povećana izdržljivost. <br />
-                    <em>Opis:</em> Ova zona je često smatrana "udobnom" zonom.
-                    Pomaže u razvijanju kardiovaskularne izdržljivosti, a telo
-                    koristi ugljene hidrate kao glavni izvor energije.
-                  </>
-                )}
-                {zone === 4 && (
-                  <>
-                    <strong>Zona 4 (80-90% HRmax):</strong> <br />
-                    <em>Svha:</em> Anaerobna, poboljšanje brzine i snage. <br />
-                    <em>Opis:</em> Visok intenzitet, gde telo počinje da koristi
-                    više glikogena nego masti. Trening u ovoj zoni poboljšava
-                    VO2 max i prag mlečne kiseline.
-                  </>
-                )}
-                {zone === 5 && (
-                  <>
-                    <strong>Zona 5 (90-100% HRmax):</strong> <br />
-                    <em>Svha:</em> Maksimalni napor, sprintovi. <br />
-                    <em>Opis:</em> Ovo je najviši intenzitet, obično se koristi
-                    za kratke nalete kao što su sprintovi. Teško je održati ovu
-                    zonu na duže staze i dizajnirana je da gura vaše telo do
-                    svojih apsolutnih granica.
-                  </>
-                )}
-              </DescriptionText>
-            </div>
-          ))}
-        </ZoneGroup>
-        {errors.vremePoZonama && (
-          <ErrorMessage>{errors.vremePoZonama}</ErrorMessage>
-        )}
+          {/* Zona vremena */}
+          <Heading>Vreme po zonama (minuti)</Heading>
+          <DescriptionText>
+            Unesite vreme provedeno u svakoj od 5 zona intenziteta (minuti).
+          </DescriptionText>
+          <ZoneGroup>
+            {[1, 2, 3, 4, 5].map((zone, index) => (
+              <div key={zone}>
+                <ZoneLabel>Zona {zone}</ZoneLabel>
+                <Input
+                  type="number"
+                  placeholder="Minuti"
+                  value={results.vremePoZonama[index]}
+                  onChange={handleZoneTimeChange(index)}
+                />
+                <DescriptionText>
+                  {zone === 1 && (
+                    <>
+                      <strong>Zona 1 (50-60% HRmax):</strong> <br />
+                      <em>Svha:</em> Laka aktivnost, oporavak. <br />
+                      <em>Opis:</em> Ovo je zona vrlo niskog intenziteta,
+                      koristi se za zagrevanje i hlađenje. Najčešće se koristi
+                      za oporavak i aerobnu kondiciju.
+                    </>
+                  )}
+                  {zone === 2 && (
+                    <>
+                      <strong>Zona 2 (60-70% HRmax):</strong> <br />
+                      <em>Svha:</em> Sagorevanje masti, izdržljivost. <br />
+                      <em>Opis:</em> Umereni intenzitet, gde telo sagoreva
+                      mešavinu masti i ugljenih hidrata. Tipično se koristi za
+                      duge, stabilne endurance treninge.
+                    </>
+                  )}
+                  {zone === 3 && (
+                    <>
+                      <strong>Zona 3 (70-80% HRmax):</strong> <br />
+                      <em>Svha:</em> Aerobna, povećana izdržljivost. <br />
+                      <em>Opis:</em> Ova zona je često smatrana "udobnom" zonom.
+                      Pomaže u razvijanju kardiovaskularne izdržljivosti, a telo
+                      koristi ugljene hidrate kao glavni izvor energije.
+                    </>
+                  )}
+                  {zone === 4 && (
+                    <>
+                      <strong>Zona 4 (80-90% HRmax):</strong> <br />
+                      <em>Svha:</em> Anaerobna, poboljšanje brzine i snage.{" "}
+                      <br />
+                      <em>Opis:</em> Visok intenzitet, gde telo počinje da
+                      koristi više glikogena nego masti. Trening u ovoj zoni
+                      poboljšava VO2 max i prag mlečne kiseline.
+                    </>
+                  )}
+                  {zone === 5 && (
+                    <>
+                      <strong>Zona 5 (90-100% HRmax):</strong> <br />
+                      <em>Svha:</em> Maksimalni napor, sprintovi. <br />
+                      <em>Opis:</em> Ovo je najviši intenzitet, obično se
+                      koristi za kratke nalete kao što su sprintovi. Teško je
+                      održati ovu zonu na duže staze i dizajnirana je da gura
+                      vaše telo do svojih apsolutnih granica.
+                    </>
+                  )}
+                </DescriptionText>
+              </div>
+            ))}
+          </ZoneGroup>
+          {errors.vremePoZonama && (
+            <ErrorMessage>{errors.vremePoZonama}</ErrorMessage>
+          )}
 
-        {/* Komentari */}
-        <InputGroup>
-          <TextArea
-            placeholder="Dodatni komentari (opciono)"
-            value={results.komentar}
-            onChange={handleInputChange("komentar")}
-          />
-        </InputGroup>
+          {/* Komentari */}
+          <InputGroup>
+            <TextArea
+              placeholder="Dodatni komentari (opciono)"
+              value={results.komentar}
+              onChange={handleInputChange("komentar")}
+            />
+          </InputGroup>
 
-        <ButtonGroup>
-          <Button type="button" variant="secondary" onClick={onBack}>
-            Nazad
-          </Button>
-          <Button type="submit" variant="primary">
-            Završi Trening
-          </Button>
-        </ButtonGroup>
-      </Form>
-    </FormWrapper>
+          <ButtonGroup>
+            <Button type="button" variant="secondary" onClick={onBack}>
+              Nazad
+            </Button>
+            <Button type="submit" variant="primary">
+              Završi Trening
+            </Button>
+          </ButtonGroup>
+        </Form>
+      </FormWrapper>
+      {session && (
+        <TrainingModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          data={session}
+        />
+      )}
+    </>
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
-import SearchBar from "../../../components/SearchBar/SearchBar";
+// import SearchBar from "../../../components/SearchBar/SearchBar";
 import Calendar from "../../../components/Calendar/Calendar";
 import { DateClickArg } from "@fullcalendar/interaction";
 import { EventClickArg, EventInput } from "@fullcalendar/core";
@@ -13,7 +13,7 @@ import {
   MainContent,
   CalendarWrapper,
 } from "./CoachDashboard.styles";
-import { SearchBarWrapper } from "../AdminDashboard/AdminDashboard.styles";
+// import { SearchBarWrapper } from "../AdminDashboard/AdminDashboard.styles";
 import { Views } from "../../../constants/views";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../../redux/store";
@@ -98,11 +98,11 @@ const CoachDashboard: React.FC = () => {
     setSelectedSession({ sessions: eventProps.sessions });
 
     // Switch views based on the number of sessions
-    if (eventProps.sessions.length === 1) {
-      dispatch(setView(Views.TRAINING_EDIT)); // Single session view
-    } else {
-      dispatch(setView(Views.TRAINING_RESULTS)); // Aggregated view for multiple sessions
-    }
+    // if (eventProps.sessions.length === 1) {
+    //   dispatch(setView(Views.TRAINING_EDIT)); // Single session view
+    // } else {
+    dispatch(setView(Views.TRAINING_RESULTS)); // Aggregated view for multiple sessions
+    // }
 
     console.log("Event clicked:", eventProps);
   };
@@ -119,9 +119,9 @@ const CoachDashboard: React.FC = () => {
             <p>Loading sessions...</p>
           ) : (
             <>
-              <SearchBarWrapper>
+              {/* <SearchBarWrapper>
                 <SearchBar onSearch={(query) => console.log(query)} />
-              </SearchBarWrapper>
+              </SearchBarWrapper> */}
               <CalendarWrapper>
                 <Calendar
                   onEventClick={handleEventClick}

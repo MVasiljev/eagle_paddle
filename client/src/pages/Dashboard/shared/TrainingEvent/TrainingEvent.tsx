@@ -41,6 +41,7 @@ const TrainingEvent: React.FC<TrainingEventProps> = ({
   date,
   session,
 }) => {
+  console.log("TrainingEvent", session);
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -129,7 +130,7 @@ const TrainingEvent: React.FC<TrainingEventProps> = ({
       <TrainingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        session={session}
+        data={session}
       />
     </TrainingEventContainer>
   );

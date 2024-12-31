@@ -74,7 +74,16 @@ const TrainingReport: React.FC<TrainingReportProps> = ({ session, user }) => {
           />
           <CompetitorName>{competitorName}</CompetitorName>
         </CompetitorInfo>
-
+        <ButtonGroup>
+          <ShowIcon
+            onClick={() => {
+              console.log("Opening modal...");
+              setIsModalOpen(true);
+            }}
+          >
+            👁️ Prikaži trening
+          </ShowIcon>
+        </ButtonGroup>
         <DataGroup>
           <DataItem>
             <FaHeartbeat />
@@ -127,12 +136,6 @@ const TrainingReport: React.FC<TrainingReportProps> = ({ session, user }) => {
             <Line data={timeInZonesData} />
           </ChartContainer>
         )}
-
-        <ButtonGroup>
-          <ShowIcon onClick={() => setIsModalOpen(true)}>
-            👁️ Prikaži trening
-          </ShowIcon>
-        </ButtonGroup>
       </TrainingReportContainer>
 
       {/* Modal to Show Full Training Details */}
@@ -140,7 +143,7 @@ const TrainingReport: React.FC<TrainingReportProps> = ({ session, user }) => {
         <TrainingModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          session={session}
+          data={session}
         />
       )}
     </>

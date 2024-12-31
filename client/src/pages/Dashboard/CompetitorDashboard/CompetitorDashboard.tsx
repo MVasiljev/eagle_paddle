@@ -4,13 +4,13 @@ import { EventClickArg, EventInput } from "@fullcalendar/core";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import Calendar from "../../../components/Calendar/Calendar";
-import SearchBar from "../../../components/SearchBar/SearchBar";
+// import SearchBar from "../../../components/SearchBar/SearchBar";
 import TrainingResultsForm from "./components/TrainingResultsForm";
 import MentalHealthForm from "./components/MentalHealthForm";
 import {
   DashboardContainer,
   MainContent,
-  SearchBarWrapper,
+  // SearchBarWrapper,
   CalendarWrapper,
   ContentCenter,
 } from "./CompetitorDashboard.styles";
@@ -117,9 +117,9 @@ const CompetitorDashboard: React.FC = () => {
       <MainContent>
         {view === Views.CALENDAR || !view ? (
           <ContentCenter>
-            <SearchBarWrapper>
+            {/* <SearchBarWrapper>
               <SearchBar onSearch={(query) => console.log(query)} />
-            </SearchBarWrapper>
+            </SearchBarWrapper> */}
             <CalendarWrapper>
               <Calendar
                 onEventClick={handleEventClick}
@@ -143,6 +143,7 @@ const CompetitorDashboard: React.FC = () => {
               setSelectedSessionId(null);
               dispatch(setView(Views.CALENDAR));
             }}
+            session={selectedSession || null}
           />
         ) : null}
       </MainContent>

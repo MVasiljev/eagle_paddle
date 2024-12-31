@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
-import SearchBar from "../../../components/SearchBar/SearchBar";
+// import SearchBar from "../../../components/SearchBar/SearchBar";
 import Calendar from "../../../components/Calendar/Calendar";
 import { DateClickArg } from "@fullcalendar/interaction";
 import { EventClickArg, EventInput } from "@fullcalendar/core";
@@ -14,7 +14,7 @@ import {
   Sidebar,
   SidebarLink,
   MainContent,
-  SearchBarWrapper,
+  // SearchBarWrapper,
   CalendarWrapper,
 } from "./AdminDashboard.styles";
 import AssignCompetitorsToTraining from "../shared/TrainingPlanPage/AssignCompetitorsToTraining";
@@ -164,9 +164,9 @@ const AdminDashboard: React.FC = () => {
             <p>Loading sessions...</p>
           ) : (
             <>
-              <SearchBarWrapper>
+              {/* <SearchBarWrapper>
                 <SearchBar onSearch={(query) => console.log(query)} />
-              </SearchBarWrapper>
+              </SearchBarWrapper> */}
               <CalendarWrapper>
                 <Calendar
                   onEventClick={handleEventClick}
