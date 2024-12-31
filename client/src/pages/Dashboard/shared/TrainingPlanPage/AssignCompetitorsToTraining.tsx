@@ -165,50 +165,6 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
     );
   });
 
-  const formatJSON = (
-    obj: Record<string, unknown> | TrainingPlan,
-    depth: number = 0
-  ): React.ReactNode => {
-    if (typeof obj !== "object" || obj === null) {
-      return (
-        <div style={{ marginLeft: `${depth * 20}px` }}>
-          <span>{obj}</span>
-        </div>
-      );
-    }
-
-    if (Array.isArray(obj)) {
-      // Render arrays with bullets
-      return (
-        <ul style={{ marginLeft: `${depth * 20}px`, paddingLeft: "20px" }}>
-          {obj.map((item, index) => (
-            <li key={index}>{formatJSON(item, depth + 1)}</li>
-          ))}
-        </ul>
-      );
-    }
-
-    // Render objects
-    return (
-      <>
-        {Object.entries(obj)
-          .filter(
-            ([key]) => !["_id", "__v", "createdAt", "updatedAt"].includes(key)
-          ) // Exclude unwanted fields
-          .map(([key, value]) => (
-            <div key={key} style={{ marginLeft: `${depth * 20}px` }}>
-              <span style={{ fontWeight: "bold" }}>{key}:</span>
-              {typeof value === "object" ? (
-                value && formatJSON(value as Record<string, unknown>, depth + 1)
-              ) : (
-                <span style={{ marginLeft: "10px" }}>{String(value)}</span>
-              )}
-            </div>
-          ))}
-      </>
-    );
-  };
-
   return (
     <Container>
       <FormGroup>
@@ -233,7 +189,95 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
       {selectedPlanDetails && (
         <PlanSummary>
           <h4>Izabrani plan - Pregled:</h4>
-          <pre>{formatJSON(selectedPlanDetails)}</pre>
+          <div>
+            <p>
+              <strong>Naziv Plana:</strong> {selectedPlanDetails.name || "N/A"}
+            </p>
+            <p>
+              <strong>Tip:</strong> {selectedPlanDetails.type || "N/A"}
+            </p>
+            <p>
+              <strong>Kategorije:</strong>{" "}
+              {selectedPlanDetails.exercises?.join(", ") || "N/A"}
+            </p>
+
+            <h3>Vežbe u Planu:</h3>
+            {selectedPlanDetails.exercises &&
+            selectedPlanDetails.exercises.length > 0 ? (
+              selectedPlanDetails.exercises.map((exercise, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    marginTop: "1rem",
+                    padding: "1rem",
+                    backgroundColor: "#2a2a2e",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.3)",
+                    color: "white",
+                  }}
+                >
+                  <p>
+                    <strong>Ime:</strong> {exercise.name || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Tip:</strong> {exercise.type || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Kategorija:</strong> {exercise.category || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Varijanta:</strong> {exercise.variant || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Serije:</strong> {exercise.series || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Ponavljanja:</strong>{" "}
+                    {exercise.repetitions || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Odmor između serija:</strong>{" "}
+                    {exercise.restBetweenSeries || 0} s
+                  </p>
+                  <p>
+                    <strong>Odmor između ponavljanja:</strong>{" "}
+                    {exercise.restBetweenRepetitions || 0} s
+                  </p>
+
+                  <h4>Trajanja:</h4>
+                  {exercise.durations && exercise.durations.length > 0 ? (
+                    exercise.durations.map((duration, dIdx) => (
+                      <p key={dIdx}>
+                        {duration.duration} {duration.unit}
+                      </p>
+                    ))
+                  ) : (
+                    <p>Nema trajanja.</p>
+                  )}
+
+                  <h4>Intenziteti:</h4>
+                  {exercise.intensities && exercise.intensities.length > 0 ? (
+                    exercise.intensities.map((intensity, iIdx) => (
+                      <p key={iIdx}>
+                        <strong>Vrednost:</strong> {intensity.value || "N/A"},{" "}
+                        <strong>Trajanje:</strong> {intensity.duration || "N/A"}{" "}
+                        {exercise.unit || "N/A"}{" "}
+                        {intensity.technique && (
+                          <span>
+                            (<strong>Tehnika:</strong> {intensity.technique})
+                          </span>
+                        )}
+                      </p>
+                    ))
+                  ) : (
+                    <p>Nema intenziteta.</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p>Nema vežbi u planu.</p>
+            )}
+          </div>
         </PlanSummary>
       )}
 
