@@ -22,6 +22,8 @@ import CompetitorProfile from "../shared/CompetitorProfilePage/CompetitorProfile
 import TrainingPlan from "../shared/TrainingPlanPage/TrainingPlan";
 import { setView } from "../../../redux/slices/viewSlice";
 import TrainingEvent from "../shared/TrainingEvent/TrainingEvent";
+import { MyTeam } from "./MyTeam/MyTeam";
+import CreateTeam from "./CreateTeam/CreateTeam";
 
 Modal.setAppElement("#root");
 
@@ -32,7 +34,23 @@ const CoachDashboard: React.FC = () => {
 
   const [events, setEvents] = useState<EventInput[]>([]);
   const [selectedSession, setSelectedSession] = useState<{
-    sessions: Array<any>;
+    sessions: Array<{
+      athlete?: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        avatar: string;
+      };
+      coach?: {
+        _id: string;
+        firstName: string;
+        lastName: string;
+        avatar: string;
+      };
+      status: string;
+      plan?: { name: string };
+      date?: string;
+    }>;
   } | null>(null);
 
   // Aggregate sessions by date and plan name
@@ -51,8 +69,12 @@ const CoachDashboard: React.FC = () => {
           aggregatedEvents[key].title = `${planName} (${
             (aggregatedEvents[key].extendedProps?.count ?? 0) + 1
           })`;
-          aggregatedEvents[key].extendedProps.count += 1;
-          aggregatedEvents[key].extendedProps.sessions.push(session);
+          if (aggregatedEvents[key].extendedProps) {
+            aggregatedEvents[key].extendedProps.count += 1;
+          }
+          if (aggregatedEvents[key].extendedProps) {
+            aggregatedEvents[key].extendedProps.sessions.push(session);
+          }
         } else {
           aggregatedEvents[key] = {
             id: key,
@@ -115,6 +137,10 @@ const CoachDashboard: React.FC = () => {
           <CompetitorsPage />
         ) : view === Views.PROFILE ? (
           <CompetitorProfile />
+        ) : view === Views.MY_TEAM ? (
+          <MyTeam />
+        ) : view === Views.CREATE_TEAM ? (
+          <CreateTeam />
         ) : view === Views.PLAN ? (
           <TrainingPlan />
         ) : view === Views.TRAINING_RESULTS && selectedSession ? (

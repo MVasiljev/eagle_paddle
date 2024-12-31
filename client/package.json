@@ -20,6 +20,8 @@
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "dotenv": "^16.4.7",
+    "json2csv": "^6.0.0-alpha.2",
+    "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
     "react-chartjs-2": "^5.2.0",
@@ -34,7 +36,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@types/json2csv": "^5.0.7",
     "@types/node": "^22.10.2",
+    "@types/papaparse": "^5.3.15",
     "@types/react": "^18.3.18",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "^18.3.5",

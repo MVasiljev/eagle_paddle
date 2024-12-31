@@ -1,21 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { ITeam } from "../../types/types";
+import { ITeam, TeamState } from "../../types/types";
 import { extractErrorMessage } from "../../utils/extactErrorMessage";
 
 const API_URL =
   import.meta.env.VITE_API_URL + "teams" || "http://localhost:5000/api/teams";
 
-interface TeamState {
-  teams: ITeam[];
-  isLoading: boolean;
-  error: string | null;
-}
-
 const initialState: TeamState = {
   teams: [],
   isLoading: false,
   error: null,
+  edit: null,
 };
 
 // Fetch all teams
@@ -23,11 +18,8 @@ export const fetchTeams = createAsyncThunk(
   "teams/fetchTeams",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token provided. Please log in.");
-
       const response = await axios.get(`${API_URL}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
       return response.data; // Array of teams
@@ -53,6 +45,28 @@ export const createTeam = createAsyncThunk(
       });
 
       return response.data; // The newly created team
+    } catch (error: unknown) {
+      return rejectWithValue(extractErrorMessage(error));
+    }
+  }
+);
+
+// Update an existing team
+export const updateTeam = createAsyncThunk(
+  "teams/updateTeam",
+  async (
+    teamData: ITeam, // Full team object including _id
+    { rejectWithValue }
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token provided. Please log in.");
+
+      const response = await axios.put(`${API_URL}/${teamData._id}`, teamData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return response.data; // Updated team object
     } catch (error: unknown) {
       return rejectWithValue(extractErrorMessage(error));
     }
@@ -85,6 +99,12 @@ const teamSlice = createSlice({
     resetTeams: (state) => {
       state.teams = [];
       state.error = null;
+    },
+    setEditTeam: (state, action) => {
+      state.edit = action.payload;
+    },
+    clearEditTeam: (state) => {
+      state.edit = null;
     },
   },
   extraReducers: (builder) => {
@@ -124,10 +144,20 @@ const teamSlice = createSlice({
       .addCase(deleteTeam.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(updateTeam.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.teams.findIndex(
+          (team) => team._id === action.payload._id
+        );
+        if (index !== -1) {
+          state.teams[index] = action.payload;
+        }
+        state.edit = null; // Clear edit state
       });
   },
 });
 
-export const { resetTeams } = teamSlice.actions;
+export const { resetTeams, setEditTeam, clearEditTeam } = teamSlice.actions;
 
 export default teamSlice.reducer;

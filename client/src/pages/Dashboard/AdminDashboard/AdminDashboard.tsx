@@ -116,9 +116,9 @@ const AdminDashboard: React.FC = () => {
     <DashboardContainer>
       {/* Sidebar */}
       <Sidebar>
-        <SidebarLink onClick={() => dispatch(setView(Views.ASSIGN))}>
+        {/* <SidebarLink onClick={() => dispatch(setView(Views.ASSIGN))}>
           Dodeli Trening
-        </SidebarLink>
+        </SidebarLink> */}
         <SidebarLink onClick={() => dispatch(setView(Views.PLAN))}>
           Kreiraj trening
         </SidebarLink>

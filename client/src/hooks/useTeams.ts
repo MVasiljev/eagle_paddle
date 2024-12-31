@@ -4,21 +4,35 @@ import {
   createTeam,
   deleteTeam,
   resetTeams,
+  updateTeam,
 } from "../redux/slices/teamSlice";
 import { AppDispatch, RootState } from "../redux/store";
+import { ITeam } from "../types/types"; // Assuming ITeam is in types
+import { useEffect } from "react";
 
 export const useTeams = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { teams, isLoading, error } = useSelector(
+  const { teams, edit, isLoading, error } = useSelector(
     (state: RootState) => state.teams
   );
+
+  useEffect(() => {
+    if (!teams.length) {
+      dispatch(fetchTeams());
+    }
+  }, [dispatch, teams.length]);
 
   const fetchAllTeams = () => {
     dispatch(fetchTeams());
   };
 
   const addNewTeam = (teamData: Parameters<typeof createTeam>[0]) => {
+    console.log("Team Data: ", teamData);
     dispatch(createTeam(teamData));
+  };
+
+  const updateExistingTeam = (teamData: ITeam) => {
+    dispatch(updateTeam(teamData));
   };
 
   const removeTeam = (teamId: string) => {
@@ -31,10 +45,12 @@ export const useTeams = () => {
 
   return {
     teams,
+    edit,
     isLoading,
     error,
     fetchAllTeams,
     addNewTeam,
+    updateExistingTeam,
     removeTeam,
     resetTeamState,
   };

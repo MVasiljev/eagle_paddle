@@ -11,32 +11,66 @@ import {
   CompetitorCard,
   CompetitorAvatar,
   CompetitorName,
+  ExportButton,
 } from "./CompetitorsPage.styles";
 import { useUsers } from "../../../../hooks/useUsers";
 import { Views } from "../../../../constants/views";
+import { useRoles } from "../../../../hooks/useRoles";
+import Papa from "papaparse";  // Import papaparse
 
 const CompetitorsPage: React.FC = () => {
   const dispatch = useDispatch();
+  const { roles } = useRoles();
   const { users, isLoading: isUsersLoading, error: usersError } = useUsers();
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const filteredCompetitors = users.filter((competitor) =>
+  const competitors = users.filter((user) => {
+    const role = roles.find((role) => role._id === user.role?._id);
+    return role?.name === "competitor";
+  });
+
+  const filteredCompetitors = competitors.filter((competitor) =>
     `${competitor.firstName} ${competitor.lastName}`
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
   );
 
   const handleCompetitorClick = (competitorId: string) => {
-    dispatch(setSelectedCompetitorId(competitorId)); // Set selected competitor ID
-    dispatch(setView(Views.PROFILE)); // Change view to PROFILE
+    dispatch(setSelectedCompetitorId(competitorId)); 
+    dispatch(setView(Views.PROFILE)); 
+  };
+
+  // Export to CSV Logic
+  const exportToCSV = () => {
+    const csvData = filteredCompetitors.map((competitor) => ({
+      firstName: competitor.firstName,
+      lastName: competitor.lastName,
+      email: competitor.email,
+    }));
+
+    const csv = Papa.unparse(csvData);
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "competitors.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <CompetitorsContainer>
-      <SearchBar
-        onSearch={(query) => setSearchQuery(query)}
-        placeholder="Pretražite takmičare..."
-      />
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <SearchBar
+          onSearch={(query) => setSearchQuery(query)}
+          placeholder="Pretražite takmičare..."
+        />
+        <ExportButton onClick={exportToCSV}>Export to CSV</ExportButton>
+      </div>
+
       {isUsersLoading ? (
         <p>Loading competitors...</p>
       ) : usersError ? (

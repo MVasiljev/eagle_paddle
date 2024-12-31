@@ -64,9 +64,14 @@ const TrainingPlan = () => {
       restBetweenRepetitions: 0,
     };
 
-    const updatedPlans = [...trainingPlans];
-    updatedPlans[planIndex].exercises.push(newSegment);
-    setTrainingPlans(updatedPlans);
+    // Create a deep copy to ensure immutability
+    setTrainingPlans((prevPlans) =>
+      prevPlans.map((plan, i) =>
+        i === planIndex
+          ? { ...plan, exercises: [...plan.exercises, newSegment] }
+          : plan
+      )
+    );
   };
 
   const addGymSegment = (planIndex: number) => {
@@ -85,9 +90,14 @@ const TrainingPlan = () => {
       exercise: "",
     };
 
-    const updatedPlans = [...trainingPlans];
-    updatedPlans[planIndex].exercises.push(newGymSegment);
-    setTrainingPlans(updatedPlans);
+    // Create a deep copy to ensure immutability
+    setTrainingPlans((prevPlans) =>
+      prevPlans.map((plan, i) =>
+        i === planIndex
+          ? { ...plan, exercises: [...plan.exercises, newGymSegment] }
+          : plan
+      )
+    );
   };
 
   const updateSegment = (

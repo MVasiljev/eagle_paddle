@@ -1,6 +1,5 @@
-/** @jsxImportSource @emotion/react */
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
 import {
   ProfileContainer,
@@ -21,6 +20,9 @@ import {
 } from "chart.js";
 import { useUsers } from "../../../../hooks/useUsers";
 import Calendar from "../../../../components/Calendar/Calendar";
+import { useTrainingSessions } from "../../../../hooks/useTrainingSession";
+import { setView } from "../../../../redux/slices/viewSlice";
+import { Views } from "../../../../constants/views";
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
 
@@ -42,30 +44,51 @@ const CompetitorProfile: React.FC = () => {
   );
 
   const [competitor, setCompetitor] = useState<Competitor | null>(null);
+  const { sessions } = useTrainingSessions();
+
+  const [filteredSessions, setFilteredSessions] = useState<typeof sessions>([]);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (selectedCompetitorId) {
       const foundCompetitor = users.find(
         (user) => user._id === selectedCompetitorId
       );
-      if (foundCompetitor) {
-        setCompetitor(foundCompetitor);
-      } else {
-        setCompetitor(null);
-      }
+      setCompetitor(foundCompetitor || null);
     }
   }, [selectedCompetitorId, users]);
 
-  if (!competitor) {
-    return <p>Loading profile...</p>;
-  }
+  // Filter sessions by competitor and date range
+  useEffect(() => {
+    if (sessions && selectedCompetitorId) {
+      const filtered = sessions.filter(
+        (session) =>
+          typeof session.athlete !== "string" &&
+          session.athlete?._id === selectedCompetitorId &&
+          (!startDate || new Date(session.date) >= startDate) &&
+          (!endDate || new Date(session.date) <= endDate)
+      );
+      setFilteredSessions(filtered);
+    }
+  }, [sessions, selectedCompetitorId, startDate, endDate]);
 
+  // Total distance calculation
+  const totalDistance = filteredSessions.reduce(
+    (sum, session) => sum + (session.results?.distance || 0),
+    0
+  );
+
+  // Populate chart with filtered sessions
   const chartData = {
-    labels: ["January", "February", "March", "April", "May", "June"],
+    labels: filteredSessions.map((session) =>
+      new Date(session.date).toLocaleDateString("sr-RS")
+    ),
     datasets: [
       {
-        label: "Performance",
-        data: [10, 20, 15, 30, 25, 40],
+        label: "Distanca po treningu (km)",
+        data: filteredSessions.map((session) => session.results?.distance),
         borderColor: "#6a5acd",
         backgroundColor: "rgba(106, 90, 205, 0.1)",
         pointBorderColor: "#6a5acd",
@@ -78,28 +101,32 @@ const CompetitorProfile: React.FC = () => {
     responsive: true,
     plugins: {
       legend: {
-        display: false,
+        display: true,
+        labels: {
+          color: "#fff",
+        },
       },
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-        },
         ticks: {
           color: "#fff",
         },
       },
       y: {
-        grid: {
-          color: "rgba(255, 255, 255, 0.1)",
-        },
         ticks: {
           color: "#fff",
+        },
+        grid: {
+          color: "rgba(255, 255, 255, 0.1)",
         },
       },
     },
   };
+
+  if (!competitor) {
+    return <p>Učitavanje profila...</p>;
+  }
 
   return (
     <ProfileContainer>
@@ -110,42 +137,99 @@ const CompetitorProfile: React.FC = () => {
           style={{ borderRadius: "10px" }}
         />
         <h1>{`${competitor.firstName} ${competitor.lastName}`}</h1>
-        {/* <p>{competitor.role?.name || "N/A"}</p> */}
       </ProfileHeader>
+
       <Calendar
-        events={[]}
+        events={filteredSessions.map((session) => ({
+          id: session._id,
+          title: session.plan.name,
+          start: session.date,
+          extendedProps: {
+            status: session.status,
+          },
+        }))}
         onEventClick={function (): void {
-          throw new Error("Function not implemented.");
+          dispatch(setView(Views.TRAINING_RESULTS));
         }}
         onDateClick={function (): void {
           throw new Error("Function not implemented.");
         }}
       />
+
       <ProfileDetails>
         <DetailRow>
           <Label>Email:</Label>
           <Value>{competitor.email}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>First Name:</Label>
+          <Label>Ime:</Label>
           <Value>{competitor.firstName}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Last Name:</Label>
+          <Label>Prezime:</Label>
           <Value>{competitor.lastName}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Approved:</Label>
-          <Value>{competitor.approved ? "Yes" : "No"}</Value>
+          <Label>Odobren:</Label>
+          <Value>{competitor.approved ? "Da" : "Ne"}</Value>
         </DetailRow>
       </ProfileDetails>
 
-      {/* Statistics Section */}
       <div style={{ marginTop: "40px" }}>
-        <h3 style={{ color: "#fff", marginBottom: "20px" }}>
-          Performance Statistics
-        </h3>
+        <h3 style={{ color: "#fff" }}>Ukupno preveslano: {totalDistance} km</h3>
+
+        <div style={{ display: "flex", gap: "20px", margin: "20px 0" }}>
+          <div>
+            <label style={{ color: "#fff" }}>Od: </label>
+            <input
+              type="date"
+              onChange={(e) => setStartDate(new Date(e.target.value))}
+              style={{ padding: "8px", borderRadius: "5px" }}
+            />
+          </div>
+          <div>
+            <label style={{ color: "#fff" }}>Do: </label>
+            <input
+              type="date"
+              onChange={(e) => setEndDate(new Date(e.target.value))}
+              style={{ padding: "8px", borderRadius: "5px" }}
+            />
+          </div>
+        </div>
+
         <Line data={chartData} options={chartOptions} />
+
+        <table
+          style={{
+            width: "100%",
+            marginTop: "30px",
+            color: "#fff",
+            borderCollapse: "collapse",
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={{ textAlign: "left", padding: "12px 15px" }}>Datum</th>
+              <th style={{ textAlign: "left", padding: "12px 15px" }}>Plan</th>
+              <th style={{ textAlign: "left", padding: "12px 15px" }}>
+                Distanca (km)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSessions.map((session) => (
+              <tr key={session._id}>
+                <td style={{ padding: "12px 15px" }}>
+                  {new Date(session.date).toLocaleDateString("sr-RS")}
+                </td>
+                <td style={{ padding: "12px 15px" }}>{session.plan.name}</td>
+                <td style={{ padding: "12px 15px" }}>
+                  {session.results?.distance} km
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </ProfileContainer>
   );

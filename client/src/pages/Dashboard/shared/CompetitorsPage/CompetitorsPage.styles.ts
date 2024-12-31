@@ -52,3 +52,17 @@ export const CompetitorName = styled.p`
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   color: ${({ theme }) => theme.colors.white};
 `;
+
+export const ExportButton = styled.button`
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: #45a049;
+  }
+`;

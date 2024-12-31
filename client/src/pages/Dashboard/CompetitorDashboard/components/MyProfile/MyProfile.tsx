@@ -23,16 +23,32 @@ import {
   CompetitionResult,
 } from "../../../../../types/types";
 import { fetchCurrentUser } from "../../../../../redux/slices/userSlice";
+import { useTrainingSessions } from "../../../../../hooks/useTrainingSession";
+import { Line } from "react-chartjs-2";
 
 const MyProfile: React.FC = () => {
   const { updateUser } = useUsers();
   const { boats } = useBoats();
   const { clubs } = useClubs();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { sessions } = useTrainingSessions();
+
+  const [filteredSessions, setFilteredSessions] = useState<typeof sessions>([]);
 
   const [editMode, setEditMode] = useState(false);
   const [editedData, setEditedData] = useState<Partial<User>>(user || {});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (sessions && user) {
+      const userSessions = sessions.filter(
+        (session) =>
+          typeof session.athlete !== "string" &&
+          session.athlete?._id === user._id
+      );
+      setFilteredSessions(userSessions);
+    }
+  }, [sessions, user]);
 
   const handleEditToggle = () => {
     setEditMode(!editMode);
@@ -43,6 +59,8 @@ const MyProfile: React.FC = () => {
   };
 
   const handleSave = async () => {
+    alert("Ažuriranje profila ce biti omoguceno naknadno...");
+    return;
     if (user) {
       const dataToSend: UpdateUserData = {
         ...editedData,
@@ -114,13 +132,64 @@ const MyProfile: React.FC = () => {
     if (Array.isArray(value)) {
       return "Više rezultata";
     }
-    if (typeof value === "object") {
+    if (typeof value === "object" && value !== null) {
       return (value as { name: string })?.name || "N/A";
     }
     if (typeof value === "boolean") {
       return value ? "Da" : "Ne";
     }
+    if (typeof value === "number") {
+      return String(value); // Ensure numbers are converted to string
+    }
     return value !== undefined ? String(value) : "N/A";
+  };
+
+  const totalDistance = filteredSessions.reduce(
+    (sum, session) => sum + (session.results?.distance || 0),
+    0
+  );
+
+  const chartData = {
+    labels: filteredSessions.map((session) =>
+      new Date(session.date).toLocaleDateString("sr-RS")
+    ),
+    datasets: [
+      {
+        label: "Distanca po treningu (km)",
+        data: filteredSessions.map((session) => session.results?.distance || 0),
+        borderColor: "#6a5acd",
+        backgroundColor: "rgba(106, 90, 205, 0.1)",
+        pointBorderColor: "#6a5acd",
+        pointBackgroundColor: "#6a5acd",
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        labels: {
+          color: "#fff",
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: "#fff",
+        },
+      },
+      y: {
+        ticks: {
+          color: "#fff",
+        },
+        grid: {
+          color: "rgba(255, 255, 255, 0.1)",
+        },
+      },
+    },
   };
 
   return (
@@ -246,6 +315,11 @@ const MyProfile: React.FC = () => {
       ) : (
         <EditButton onClick={handleEditToggle}>Izmeni profil</EditButton>
       )}
+
+      <div style={{ marginTop: "40px" }}>
+        <h3 style={{ color: "#fff" }}>Ukupno preveslano: {totalDistance} km</h3>
+        <Line data={chartData} options={chartOptions} />
+      </div>
     </ProfileContainer>
   );
 };

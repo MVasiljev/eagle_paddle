@@ -68,7 +68,7 @@ const AdminRequestForApproval: React.FC = () => {
       {isLoadingUsers || isLoadingRoles ? (
         <LoadingMessage>Loading...</LoadingMessage>
       ) : unapprovedUsers.length === 0 ? (
-        <p style={{ color: "white" }}>No unapproved users available.</p>
+        <p style={{ color: "white" }}>Nema zahteva za dozvolom za odobrenje.</p>
       ) : (
         <Table>
           <thead>

@@ -241,6 +241,7 @@ export interface ITeam {
 // Team State
 export interface TeamState {
   teams: ITeam[]; // List of teams
+  edit: ITeam | null; // Team being edited
   isLoading: boolean; // Loading state for teams
   error: string | null; // Error message, if any
 }

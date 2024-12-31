@@ -55,11 +55,13 @@ const Calendar: React.FC<CalendarProps> = ({
           <div>
             <b>{eventInfo.event.title}</b>
             <br />
-            <i>
-              {eventInfo.event.extendedProps.status === "completed"
-                ? "Završeno"
-                : "Predstojeće"}
-            </i>
+            {eventInfo.event.extendedProps.status && (
+              <i>
+                {eventInfo.event.extendedProps.status === "completed"
+                  ? "Završeno"
+                  : "Predstojeće"}
+              </i>
+            )}
           </div>
         )}
       />

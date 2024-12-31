@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { fetchTrainingPlans } from "../../../../redux/slices/trainingPlanSlice";
-import { assignPlanToCompetitors } from "../../../../redux/slices/trainingSessionSlice";
+import {
+  assignPlanToCompetitors,
+  fetchTrainingSessions,
+} from "../../../../redux/slices/trainingSessionSlice";
 import { fetchApprovedUsers } from "../../../../redux/slices/userSlice";
 import { AppDispatch, RootState } from "../../../../redux/store";
 import { useRoles } from "../../../../hooks/useRoles";
-import { TrainingPlan } from "../../../../types/types";
+import { TrainingPlan, User } from "../../../../types/types";
 import { AiOutlinePlus } from "react-icons/ai";
 import * as Yup from "yup";
 import { useAuth } from "../../../../hooks/useAuth";
@@ -25,6 +28,9 @@ import {
   AddButton,
 } from "./AssignCompetitorsToTraining.styles";
 import CustomToast from "../../../../components/CustomToast/CustomToast";
+import { useTeams } from "../../../../hooks/useTeams";
+import { setView } from "../../../../redux/slices/viewSlice";
+import { Views } from "../../../../constants/views";
 
 interface Props {
   role: "admin" | "coach";
@@ -34,6 +40,7 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { fetchAllTeams, teams } = useTeams();
   const { roles } = useRoles();
 
   const [selectedPlan, setSelectedPlan] = useState<string>("");
@@ -42,6 +49,12 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
   const [date, setDate] = useState<string>("");
   const [selectedPlanDetails, setSelectedPlanDetails] =
     useState<TrainingPlan | null>(null);
+
+  useEffect(() => {
+    if (!teams.length) {
+      fetchAllTeams();
+    }
+  }, [fetchAllTeams, teams.length]);
 
   useEffect(() => {
     dispatch(fetchApprovedUsers());
@@ -56,6 +69,16 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
   const plansLoading = useSelector(
     (state: RootState) => state.trainingPlan.loading
   );
+
+  const competitors = users.filter((user) => {
+    const role = roles.find((role) => role._id === user.role?._id);
+    return role?.name === "competitor";
+  });
+
+  const team = teams.find((t) => {
+    const coach = t.coach as { _id?: string } | null; // Handle null or missing coach
+    return coach && coach._id === user?._id;
+  }) ?? { members: competitors }; // Fallback to competitors if no team
 
   const handleAssignPlan = async () => {
     const schema = Yup.object().shape({
@@ -94,7 +117,8 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
           throw new Error("Funkcija nije implementirana.");
         }}
       />;
-      navigate("/");
+      dispatch(fetchTrainingSessions());
+      dispatch(setView(Views.CALENDAR));
     } catch (error) {
       if (error instanceof Yup.ValidationError) {
         alert("Validacija nije uspela. Proverite unose.");
@@ -128,10 +152,10 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
     setSelectedCoach(null);
   };
 
-  const competitors = users.filter((user) => {
-    const role = roles.find((role) => role._id === user.role?._id);
-    return role?.name === "competitor";
-  });
+  // const competitors = users.filter((user) => {
+  //   const role = roles.find((role) => role._id === user.role?._id);
+  //   return role?.name === "competitor";
+  // });
 
   const coaches = users.filter((coach) => {
     const role = roles.find((role) => role._id === coach.role?._id);
@@ -228,16 +252,24 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
           {usersLoading ? (
             <p>Učitavanje takmičara...</p>
           ) : (
-            competitors
-              .filter((comp) => !selectedCompetitors.includes(comp._id))
+            (team?.members ?? competitors)
+              .filter((comp): comp is User => typeof comp !== "string")
+              .filter(
+                (competitor) =>
+                  !selectedCompetitors.includes((competitor as User)._id)
+              )
               .map((competitor) => (
-                <CompetitorItem key={competitor._id}>
+                <CompetitorItem key={(competitor as User)._id}>
                   <AddButton
-                    onClick={() => handleAddCompetitor(competitor._id)}
+                    onClick={() =>
+                      handleAddCompetitor((competitor as User)._id)
+                    }
                   >
                     <AiOutlinePlus />
                   </AddButton>
-                  <span>{`${competitor.firstName} ${competitor.lastName}`}</span>
+                  <span>{`${(competitor as User).firstName} ${
+                    (competitor as User).lastName
+                  }`}</span>
                 </CompetitorItem>
               ))
           )}

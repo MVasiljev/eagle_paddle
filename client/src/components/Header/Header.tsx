@@ -69,6 +69,9 @@ const Header: React.FC = () => {
             <NavLink onClick={() => dispatch(setView(Views.COMPETITORS))}>
               Takmičari
             </NavLink>
+            <NavLink onClick={() => dispatch(setView(Views.MY_TEAM))}>
+              Moj tim
+            </NavLink>
           </>
         );
       case "competitor":
