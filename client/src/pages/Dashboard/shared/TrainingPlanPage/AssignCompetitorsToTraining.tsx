@@ -193,13 +193,6 @@ const AssignCompetitorsToTraining: React.FC<Props> = ({ role }) => {
             <p>
               <strong>Naziv Plana:</strong> {selectedPlanDetails.name || "N/A"}
             </p>
-            <p>
-              <strong>Tip:</strong> {selectedPlanDetails.type || "N/A"}
-            </p>
-            <p>
-              <strong>Kategorije:</strong>{" "}
-              {selectedPlanDetails.exercises?.join(", ") || "N/A"}
-            </p>
 
             <h3>Vežbe u Planu:</h3>
             {selectedPlanDetails.exercises &&
