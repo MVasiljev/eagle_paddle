@@ -8,11 +8,11 @@ const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7); // Dim the background
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000; // Ensure it is above everything
+  z-index: 1000;
 `;
 
 const ModalContent = styled.div`
@@ -35,7 +35,6 @@ const CloseButton = styled.button`
   background: none;
   border: none;
   font-size: 1.8rem;
-  color: #ffffff;
   cursor: pointer;
   color: white;
 
@@ -46,9 +45,7 @@ const CloseButton = styled.button`
 
 const ModalTitle = styled.h2`
   font-size: 2rem;
-  color: white;
   margin-bottom: 1rem;
-  color: white;
 `;
 
 const ExerciseCard = styled.div`
@@ -57,34 +54,58 @@ const ExerciseCard = styled.div`
   background-color: #2a2a2e;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  color: white;
-
-  & p {
-    margin: 0.5rem 0;
-    color: white;
-  }
-
-  h4 {
-    margin-top: 1rem;
-    color: white;
-  }
 `;
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  session: TrainingSession | undefined;
+  data: TrainingSession | TrainingPlan | undefined;
 }
 
-const TrainingModal: React.FC<ModalProps> = ({ isOpen, onClose, session }) => {
-  if (!isOpen || !session) return null;
+// Type Guard to Check if Data is a TrainingSession
+const isSession = (
+  data: TrainingSession | TrainingPlan
+): data is TrainingSession => {
+  return (data as TrainingSession).plan !== undefined;
+};
 
-  const plan = session.plan as TrainingPlan;
+const TrainingModal: React.FC<ModalProps> = ({ isOpen, onClose, data }) => {
+  if (!isOpen || !data) return null;
 
-  return (
-    <ModalOverlay>
-      <ModalContent>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
+  const renderPlanDetails = (plan: TrainingPlan) => (
+    <>
+      <ModalTitle>{plan.name || "Detalji Plana"}</ModalTitle>
+      <h3>Vežbe u Planu:</h3>
+      {plan.exercises && plan.exercises.length > 0 ? (
+        plan.exercises.map((exercise, idx) => (
+          <ExerciseCard key={idx}>
+            <p>
+              <strong>Ime:</strong> {exercise.name}
+            </p>
+            <p>
+              <strong>Tip:</strong> {exercise.type}
+            </p>
+            <p>
+              <strong>Kategorija:</strong> {exercise.category}
+            </p>
+            <p>
+              <strong>Serije:</strong> {exercise.series}
+            </p>
+            <p>
+              <strong>Ponavljanja:</strong> {exercise.repetitions}
+            </p>
+          </ExerciseCard>
+        ))
+      ) : (
+        <p>Nema vežbi u planu.</p>
+      )}
+    </>
+  );
+
+  const renderSessionDetails = (session: TrainingSession) => {
+    const plan = session.plan as TrainingPlan;
+    return (
+      <>
         <ModalTitle>{plan.name || "Detalji Treninga"}</ModalTitle>
         <p>
           <strong>Status:</strong> {session.status || "N/A"}
@@ -96,73 +117,18 @@ const TrainingModal: React.FC<ModalProps> = ({ isOpen, onClose, session }) => {
                 month: "long",
                 year: "numeric",
               })
-            : "N/A"}{" "}
+            : "N/A"}
         </p>
+        {renderPlanDetails(plan)}
+      </>
+    );
+  };
 
-        <h3>Vežbe u Planu:</h3>
-        {plan.exercises && plan.exercises.length > 0 ? (
-          plan.exercises.map((exercise, idx) => (
-            <ExerciseCard key={idx}>
-              <p>
-                <strong>Ime:</strong> {exercise.name}
-              </p>
-              <p>
-                <strong>Tip:</strong> {exercise.type}
-              </p>
-              <p>
-                <strong>Kategorija:</strong> {exercise.category}
-              </p>
-              <p>
-                <strong>Varijanta:</strong> {exercise.variant}
-              </p>
-              <p>
-                <strong>Serije:</strong> {exercise.series}
-              </p>
-              <p>
-                <strong>Ponavljanja:</strong> {exercise.repetitions}
-              </p>
-              <p>
-                <strong>Odmor između serija:</strong>{" "}
-                {exercise.restBetweenSeries} s
-              </p>
-              <p>
-                <strong>Odmor između ponavljanja:</strong>{" "}
-                {exercise.restBetweenRepetitions} s
-              </p>
-
-              <h4>Trajanja:</h4>
-              {exercise.durations && exercise.durations.length > 0 ? (
-                exercise.durations.map((duration, dIdx) => (
-                  <p key={dIdx}>
-                    {duration.duration} {duration.unit}
-                  </p>
-                ))
-              ) : (
-                <p>Nema trajanja.</p>
-              )}
-
-              <h4>Intenziteti:</h4>
-              {exercise.intensities && exercise.intensities.length > 0 ? (
-                exercise.intensities.map((intensity, iIdx) => (
-                  <p key={iIdx}>
-                    <strong>Vrednost:</strong> {intensity.value},{" "}
-                    <strong>Trajanje:</strong> {intensity.duration}{" "}
-                    {exercise.unit}{" "}
-                    {intensity.technique && (
-                      <span>
-                        (<strong>Tehnika:</strong> {intensity.technique})
-                      </span>
-                    )}
-                  </p>
-                ))
-              ) : (
-                <p>Nema intenziteta.</p>
-              )}
-            </ExerciseCard>
-          ))
-        ) : (
-          <p>Nema vežbi u planu.</p>
-        )}
+  return (
+    <ModalOverlay>
+      <ModalContent>
+        <CloseButton onClick={onClose}>&times;</CloseButton>
+        {isSession(data) ? renderSessionDetails(data) : renderPlanDetails(data)}
       </ModalContent>
     </ModalOverlay>
   );

@@ -35,6 +35,7 @@ import DisciplineForm from "./pages/DisciplineForm/DisciplineForm";
 import MentalHealthList from "./pages/MentalHealthList/MentalHealthList";
 // import TrainingReport from "../shared/TrainingReport/TrainingReport";
 import TrainingEvent from "../shared/TrainingEvent/TrainingEvent";
+import TrainingPlanList from "./pages/TrainingPlanList/TrainingPlanList";
 
 const AdminDashboard: React.FC = () => {
   const dispatch = useDispatch();
@@ -116,9 +117,9 @@ const AdminDashboard: React.FC = () => {
     <DashboardContainer>
       {/* Sidebar */}
       <Sidebar>
-        {/* <SidebarLink onClick={() => dispatch(setView(Views.ASSIGN))}>
-          Dodeli Trening
-        </SidebarLink> */}
+        <SidebarLink onClick={() => dispatch(setView(Views.TRAINING_LIST))}>
+          Lista treninga
+        </SidebarLink>
         <SidebarLink onClick={() => dispatch(setView(Views.PLAN))}>
           Kreiraj trening
         </SidebarLink>
@@ -205,6 +206,8 @@ const AdminDashboard: React.FC = () => {
           <AdminRequestForApproval />
         ) : view === Views.PLAN ? (
           <TrainingPlan />
+        ) : view === Views.TRAINING_LIST ? (
+          <TrainingPlanList />
         ) : view === Views.TRAINING_RESULTS && selectedSession ? (
           <TrainingEvent
             competitors={selectedSession.sessions.map(
