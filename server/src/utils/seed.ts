@@ -65,6 +65,39 @@ export const initializeDatabase = async () => {
       logger.info("Default admin already exists. Skipping creation.");
     }
 
+    // Create Training Types
+    const trainingTypes = [
+      {
+        name: "Standard Training",
+        variant: "standard",
+        categories: ["Endurance", "Technique"],
+      },
+      {
+        name: "Strength Training",
+        variant: "strength",
+        categories: ["Strength", "Power"],
+        exercises: ["Deadlift", "Bench Press", "Squat"],
+      },
+      {
+        name: "Cardio Training",
+        variant: "cardio",
+        categories: ["Aerobic", "Stamina"],
+        exercises: ["Rowing", "Running", "Cycling"],
+      },
+    ];
+
+    for (const type of trainingTypes) {
+      const existingType = await TrainingType.findOne({ name: type.name });
+      if (!existingType) {
+        await TrainingType.create(type);
+        logger.info(`Training type '${type.name}' created.`);
+      } else {
+        logger.info(`Training type '${type.name}' already exists. Skipping.`);
+      }
+    }
+
+    logger.info("Training types have been successfully created.");
+
     // Create Competitors and Coaches
     const competitorRole = await Role.findOne({ name: "competitor" });
     const coachRole = await Role.findOne({ name: "coach" });

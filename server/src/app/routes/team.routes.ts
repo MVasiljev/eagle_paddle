@@ -14,7 +14,7 @@ const router = Router();
  * @route GET /teams
  * @description Fetch all teams
  */
-router.get("/teams", authenticate, getAllTeams);
+router.get("/", authenticate, getAllTeams);
 
 /**
  * @route GET /teams/:id
